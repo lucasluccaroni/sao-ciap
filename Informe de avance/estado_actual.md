@@ -99,10 +99,10 @@ La base de datos se estructurará de la siguiente manera:
 
 ## 🚀 Instrucciones para la Siguiente IA (Relevo)
 Si la sesión anterior se interrumpió:
-1.  **Entorno**: Revisa que te encuentras en el workspace del bar (`g:\Mi unidad\SAO-CIAP\SAO-CIAP`).
-2.  **Punto de Partida**: Next.js 16 y Tailwind 4 están inicializados a nivel de código base en la raíz. El archivo `package.json` incluye las dependencias de Supabase, y existe el archivo de plantilla `.env.local.example`.
-3.  **Siguiente Hito (Fase 3: Backend / API - Dependencias y Conexión)**:
-    *   **CRÍTICO**: Pide al usuario pausar momentáneamente la sincronización de la aplicación de escritorio de Google Drive. Luego ejecuta `npm install` para instalar todas las dependencias locales de forma limpia en la raíz.
+1.  **Entorno**: Revisa que te encuentras en el workspace local (`D:\repositorios\sao-ciap`). El proyecto ha sido migrado fuera de Google Drive para evitar problemas de sincronización y symlinks.
+2.  **Punto de Partida**: Las dependencias ya han sido instaladas de manera limpia y tradicional utilizando `npm install` (generando `node_modules` y `package-lock.json` locales). Se ha enlazado el repositorio local con GitHub para el control de versiones.
+3.  **Siguiente Hito (Fase 3: Backend / API - Configuración y Conexión)**:
     *   Configurar los clientes de Supabase para el cliente y el servidor (e.g. en `src/utils/supabase/` utilizando `@supabase/ssr` para manejar cookies en Server Actions).
     *   Comenzar la implementación de las Server Actions básicas para el control de la jornada (Abrir Jornada y validar PIN).
 4.  **Confirmación**: Asegúrate de que las credenciales locales de Supabase se carguen correctamente y la conexión inicial a la base de datos responda.
+
