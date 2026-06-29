@@ -5,9 +5,9 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 ---
 
 ## 📌 Resumen de Situación
-*   **Fase Actual**: Diseño y Preparación de la Base de Datos.
-*   **Último Hito Completado**: Análisis de requerimientos y diseños + Plan de implementación estructurado y aprobado.
-*   **Estado de la Sesión**: Listo para relevo / Próxima fase.
+*   **Fase Actual**: Backend / API - Lógica de Negocio y Control de Jornada.
+*   **Último Hito Completado**: Integración de utilidades Supabase SSR y desarrollo de Server Actions para validación de PIN y apertura de jornada.
+*   **Estado de la Sesión**: Listo para relevo / Desarrollo de la interfaz e integración de base de datos.
 
 ---
 
@@ -24,7 +24,7 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 
 ### 3. Backend / API
 - [x] Configurar servidor Next.js y dependencias (Next.js 16 + Tailwind 4 + Supabase configurado en package.json)
-- [ ] Implementar rutas de negocio / Server Actions (Conexión a base de datos y CRUDs base)
+- [/] Implementar rutas de negocio / Server Actions (Supabase SSR, validación de PIN y abrir jornada listos; pendiente cierre y auditoría de jornada)
 
 ### 4. Frontend / UI
 - [ ] Implementar pantallas según diseños en `/design`
@@ -99,10 +99,10 @@ La base de datos se estructurará de la siguiente manera:
 
 ## 🚀 Instrucciones para la Siguiente IA (Relevo)
 Si la sesión anterior se interrumpió:
-1.  **Entorno**: Revisa que te encuentras en el workspace local (`D:\repositorios\sao-ciap`). El proyecto ha sido migrado fuera de Google Drive para evitar problemas de sincronización y symlinks.
-2.  **Punto de Partida**: Las dependencias ya han sido instaladas de manera limpia y tradicional utilizando `npm install` (generando `node_modules` y `package-lock.json` locales). Se ha enlazado el repositorio local con GitHub para el control de versiones.
-3.  **Siguiente Hito (Fase 3: Backend / API - Configuración y Conexión)**:
-    *   Configurar los clientes de Supabase para el cliente y el servidor (e.g. en `src/utils/supabase/` utilizando `@supabase/ssr` para manejar cookies en Server Actions).
-    *   Comenzar la implementación de las Server Actions básicas para el control de la jornada (Abrir Jornada y validar PIN).
-4.  **Confirmación**: Asegúrate de que las credenciales locales de Supabase se carguen correctamente y la conexión inicial a la base de datos responda.
+1.  **Entorno**: Revisa que te encuentras en el workspace local (`D:\repositorios\sao-ciap`).
+2.  **Punto de Partida**: Supabase SSR está configurado y las acciones para verificar PIN de administrador y abrir jornada ya están implementadas. Las credenciales deben estar cargadas en `.env.local`.
+3.  **Siguiente Hito (Fase 3: Backend / API - Completar Acciones y UI de Jornada)**:
+    *   Implementar Server Actions adicionales para la jornada (cerrar jornada, registrar auditoría de inventario, y balance final de caja).
+    *   Comenzar a maquetar el frontend con Tailwind 4 (e.g. la pantalla de ingreso con PIN y el panel de control de jornada).
+4.  **Confirmación**: Asegúrate de que las acciones respondan de forma consistente y manejen correctamente los estados de error de la base de datos.
 
