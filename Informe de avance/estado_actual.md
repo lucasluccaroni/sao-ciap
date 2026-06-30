@@ -5,9 +5,9 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 ---
 
 ## 📌 Resumen de Situación
-*   **Fase Actual**: Backend / API - Ciclo de jornada completado.
-*   **Ultimo Hito Completado**: Implementacion y compilacion exitosa de todas las Server Actions de jornada (`iniciarAuditoria`, `registrarConteosAuditoria`, `cerrarJornada` via RPC) y la funcion SQL `cerrar_jornada` en `triggers.sql`.
-*   **Estado de la Sesion**: Backend de jornada finalizado. Listo para comenzar el Frontend / UI.
+*   **Fase Actual**: Frontend / UI - Inicio de maquetado.
+*   **Ultimo Hito Completado**: Entorno de Supabase (tablas, triggers, políticas RLS) ejecutado con éxito e inicializado por el usuario. Base de datos operativa.
+*   **Estado de la Sesion**: Lista para comenzar el desarrollo de las pantallas (Pantalla de Login / Panel de Control / Interfaz de Ventas).
 
 ---
 
@@ -20,7 +20,8 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 
 ### 2. Base de Datos
 - [x] Diseñar esquema de la base de datos (Plan conceptual aprobado)
-- [x] Crear scripts de migración/inicialización (Archivos schema.sql y triggers.sql creados en /database)
+- [x] Crear scripts de migración/inicialización (`schema.sql` y `triggers.sql`)
+- [x] Crear políticas de seguridad Row Level Security (`policies.sql`)
 
 ### 3. Backend / API
 - [x] Configurar servidor Next.js y dependencias (Next.js 16 + Tailwind 4 + Supabase configurado en package.json)
