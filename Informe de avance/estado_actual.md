@@ -5,9 +5,9 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 ---
 
 ## 📌 Resumen de Situación
-*   **Fase Actual**: Backend / API - Lógica de Negocio y Control de Jornada.
-*   **Último Hito Completado**: Integración de utilidades Supabase SSR y desarrollo de Server Actions para validación de PIN y apertura de jornada.
-*   **Estado de la Sesión**: Listo para relevo / Desarrollo de la interfaz e integración de base de datos.
+*   **Fase Actual**: Backend / API - Ciclo de jornada completado.
+*   **Ultimo Hito Completado**: Implementacion y compilacion exitosa de todas las Server Actions de jornada (`iniciarAuditoria`, `registrarConteosAuditoria`, `cerrarJornada` via RPC) y la funcion SQL `cerrar_jornada` en `triggers.sql`.
+*   **Estado de la Sesion**: Backend de jornada finalizado. Listo para comenzar el Frontend / UI.
 
 ---
 
@@ -24,10 +24,17 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 
 ### 3. Backend / API
 - [x] Configurar servidor Next.js y dependencias (Next.js 16 + Tailwind 4 + Supabase configurado en package.json)
-- [/] Implementar rutas de negocio / Server Actions (Supabase SSR, validación de PIN y abrir jornada listos; pendiente cierre y auditoría de jornada)
+- [x] Implementar rutas de negocio / Server Actions
+    - [x] `validarPinAdmin` — verificacion SHA-256 del PIN del Admin autenticado
+    - [x] `obtenerJornadaActiva` — lectura de jornada activa para inicializacion de terminales
+    - [x] `abrirJornada` — insercion con control de duplicado via restriccion unica
+    - [x] `iniciarAuditoria` — transicion de estado `abierta` a `en_auditoria`
+    - [x] `registrarConteosAuditoria` — patron delete+insert en tabla `Auditoria_Inventario`
+    - [x] `cerrarJornada` — invoca RPC SQL `cerrar_jornada` para balance atomico
+- [x] Agregar funcion SQL RPC `cerrar_jornada` a `database/triggers.sql`
 
 ### 4. Frontend / UI
-- [ ] Implementar pantallas según diseños en `/design`
+- [ ] Implementar pantallas segun disenos en `/design`
 
 ---
 
@@ -97,12 +104,15 @@ La base de datos se estructurará de la siguiente manera:
 
 ---
 
-## 🚀 Instrucciones para la Siguiente IA (Relevo)
-Si la sesión anterior se interrumpió:
-1.  **Entorno**: Revisa que te encuentras en el workspace local (`D:\repositorios\sao-ciap`).
-2.  **Punto de Partida**: Supabase SSR está configurado y las acciones para verificar PIN de administrador y abrir jornada ya están implementadas. Las credenciales deben estar cargadas en `.env.local`.
-3.  **Siguiente Hito (Fase 3: Backend / API - Completar Acciones y UI de Jornada)**:
-    *   Implementar Server Actions adicionales para la jornada (cerrar jornada, registrar auditoría de inventario, y balance final de caja).
-    *   Comenzar a maquetar el frontend con Tailwind 4 (e.g. la pantalla de ingreso con PIN y el panel de control de jornada).
-4.  **Confirmación**: Asegúrate de que las acciones respondan de forma consistente y manejen correctamente los estados de error de la base de datos.
+## Instrucciones para la Siguiente IA (Relevo)
+Si la sesion anterior se interrumpio:
+1.  **Entorno**: Workspace local `D:\repositorios\sao-ciap`. Credenciales de Supabase en `.env.local`.
+2.  **Decisiones Arquitecturales Aprobadas**:
+    *   Opcion A: backend completo antes de UI.
+    *   `cerrarJornada` usa RPC SQL atomico (`cerrar_jornada`) igual que `procesar_comanda`.
+    *   `registrarConteosAuditoria` usa patron delete+insert para reemplazar conteos previos de la misma jornada.
+3.  **Archivos Clave del Backend**:
+    *   `src/app/actions/jornada.ts` — todas las Server Actions de ciclo de jornada.
+    *   `database/triggers.sql` — funciones SQL RPC (agregar `cerrar_jornada` si no esta).
+4.  **Siguiente Hito**: Verificar compilacion exitosa del backend completo y luego comenzar la UI con Tailwind 4, empezando por la pantalla de login y el panel de apertura/cierre de jornada.
 
