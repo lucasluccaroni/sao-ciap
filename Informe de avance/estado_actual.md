@@ -5,9 +5,9 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 ---
 
 ## 📌 Resumen de Situación
-*   **Fase Actual**: Frontend / UI - Inicio de maquetado.
-*   **Ultimo Hito Completado**: Entorno de Supabase (tablas, triggers, políticas RLS) ejecutado con éxito e inicializado por el usuario. Base de datos operativa.
-*   **Estado de la Sesion**: Lista para comenzar el desarrollo de las pantallas (Pantalla de Login / Panel de Control / Interfaz de Ventas).
+*   **Fase Actual**: Frontend / UI - Desarrollo de pantallas.
+*   **Último Hito Completado**: Pantalla de Login, Layout administrativo `/admin`, Caja del Día (`/admin/caja`) y Flujo de Cierre de Caja (`/admin/cierre`) maquetados, integrados con base de datos y validados localmente por el usuario.
+*   **Estado de la Sesión**: Listo para dar inicio al desarrollo del módulo de mozos (Interfaz de Ventas / Toma de Comandas).
 
 ---
 
@@ -36,8 +36,8 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 
 ### 4. Frontend / UI
 - [/] Implementar pantallas segun disenos en `/design`
-    - [/] Pantalla de Login (Fase inicial, assets y CSS)
-    - [ ] Panel de Control de Jornada
+    - [x] Pantalla de Login (Maquetado e integración de acciones completados; pendiente copia local de assets por parte del usuario)
+    - [x] Panel de Control de Jornada (Layout de administración, Caja del Día y flujo secuencial de Cierre de Caja completados en código)
     - [ ] Interfaz Principal de Ventas
 
 ---
@@ -110,11 +110,7 @@ La base de datos se estructurará de la siguiente manera:
 
 ## Instrucciones para la Siguiente IA (Relevo)
 Si eres la IA que retoma el desarrollo en un nuevo chat:
-1.  **Entorno**: Workspace local `D:\repositorios\sao-ciap`. La base de datos Supabase ya está 100% inicializada y configurada (tablas, RLS, `next.config.ts` y `.env.local` con `dotenv` instalados).
-2.  **Estado del Backend**: Todas las Server Actions de `jornada.ts` y el RPC `cerrar_jornada` están implementados y operativos.
-3.  **Primer Paso Obligatorio**: Estás en la **Fase 4: Frontend / UI**. Debes preguntarle al usuario por cuál de las siguientes pantallas prefiere comenzar a maquetar:
-    *   Pantalla de Login y validación de PIN
-    *   Panel de Control de Jornada
-    *   Interfaz Principal de Ventas (Toma de Comandas)
-4.  **Estética**: Recuerda utilizar Tailwind 4 y aplicar los lineamientos de diseño moderno estipulados en las reglas generales (vibrante, cristalino, profesional). Revisa la carpeta `/design` para obtener el contexto visual.
-
+1.  **Entorno**: Workspace local `D:\repositorios\sao-ciap`. La base de datos Supabase ya está 100% inicializada y configurada.
+2.  **Estado actual**: La pantalla de Login (`/`) y el Panel de Control de Jornada (Caja del Día en `/admin/caja` y flujo de Cierre en `/admin/cierre`) están codificados e integrados con base de datos local y Supabase.
+3.  **Siguiente Paso Obligatorio**: Estás en la **Fase 4: Frontend / UI**. Debes maquetar la **Interfaz Principal de Ventas (Toma de Comandas)** o asistir al usuario con la verificación local de las pantallas de administración desarrolladas.
+4.  **Estética**: Recuerda utilizar Tailwind 4 y aplicar los lineamientos de diseño moderno (vibrante, cristalino, profesional). Revisa la carpeta `/design` para obtener el contexto visual.

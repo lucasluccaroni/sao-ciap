@@ -10,6 +10,20 @@
 
   --font-livvic: var(--font-livvic);
   --font-creepster: var(--font-creepster);
+
+  --animate-heartbeat: heartbeat 1.5s ease-in-out infinite;
+
+  @keyframes heartbeat {
+
+    0%,
+    100% {
+      transform: scale(1);
+    }
+
+    50% {
+      transform: scale(1.15);
+    }
+  }
 }
 
 @layer base {
@@ -17,4 +31,10 @@
     background-color: var(--color-bg-base);
     color: var(--color-text-main);
   }
+}
+
+.bg-phantom-pattern {
+  background-image: url('/images/fantasma.png');
+  background-repeat: repeat;
+  background-size: 250px;
 }
