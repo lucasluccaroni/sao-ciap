@@ -35,7 +35,10 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 - [x] Agregar funcion SQL RPC `cerrar_jornada` a `database/triggers.sql`
 
 ### 4. Frontend / UI
-- [ ] Implementar pantallas segun disenos en `/design`
+- [/] Implementar pantallas segun disenos en `/design`
+    - [/] Pantalla de Login (Fase inicial, assets y CSS)
+    - [ ] Panel de Control de Jornada
+    - [ ] Interfaz Principal de Ventas
 
 ---
 
@@ -106,14 +109,12 @@ La base de datos se estructurará de la siguiente manera:
 ---
 
 ## Instrucciones para la Siguiente IA (Relevo)
-Si la sesion anterior se interrumpio:
-1.  **Entorno**: Workspace local `D:\repositorios\sao-ciap`. Credenciales de Supabase en `.env.local`.
-2.  **Decisiones Arquitecturales Aprobadas**:
-    *   Opcion A: backend completo antes de UI.
-    *   `cerrarJornada` usa RPC SQL atomico (`cerrar_jornada`) igual que `procesar_comanda`.
-    *   `registrarConteosAuditoria` usa patron delete+insert para reemplazar conteos previos de la misma jornada.
-3.  **Archivos Clave del Backend**:
-    *   `src/app/actions/jornada.ts` — todas las Server Actions de ciclo de jornada.
-    *   `database/triggers.sql` — funciones SQL RPC (agregar `cerrar_jornada` si no esta).
-4.  **Siguiente Hito**: Verificar compilacion exitosa del backend completo y luego comenzar la UI con Tailwind 4, empezando por la pantalla de login y el panel de apertura/cierre de jornada.
+Si eres la IA que retoma el desarrollo en un nuevo chat:
+1.  **Entorno**: Workspace local `D:\repositorios\sao-ciap`. La base de datos Supabase ya está 100% inicializada y configurada (tablas, RLS, `next.config.ts` y `.env.local` con `dotenv` instalados).
+2.  **Estado del Backend**: Todas las Server Actions de `jornada.ts` y el RPC `cerrar_jornada` están implementados y operativos.
+3.  **Primer Paso Obligatorio**: Estás en la **Fase 4: Frontend / UI**. Debes preguntarle al usuario por cuál de las siguientes pantallas prefiere comenzar a maquetar:
+    *   Pantalla de Login y validación de PIN
+    *   Panel de Control de Jornada
+    *   Interfaz Principal de Ventas (Toma de Comandas)
+4.  **Estética**: Recuerda utilizar Tailwind 4 y aplicar los lineamientos de diseño moderno estipulados en las reglas generales (vibrante, cristalino, profesional). Revisa la carpeta `/design` para obtener el contexto visual.
 
