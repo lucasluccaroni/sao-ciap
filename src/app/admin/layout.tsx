@@ -3,7 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
-import { cerrarSesion } from '@/app/actions/auth'
+import BotonSalirAdmin from '@/components/BotonSalirAdmin'
 
 export default async function AdminLayout({
   children,
@@ -46,11 +46,6 @@ export default async function AdminLayout({
     return `${diaSemana} ${diaMes}/${mes}`
   }
 
-  const handleLogout = async () => {
-    'use server'
-    await cerrarSesion()
-    redirect('/')
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#080A0D] font-livvic text-[#F2F2F2]">
@@ -125,15 +120,8 @@ export default async function AdminLayout({
             </span>
           </div>
           
-          {/* Botón de Salir mediante Form Action de servidor */}
-          <form action={handleLogout}>
-            <button
-              type="submit"
-              className="h-8 px-4 border border-[#9D9D9D]/20 bg-[#2E2E2E]/40 hover:bg-[#2E2E2E]/80 text-xs font-semibold text-[#9D9D9D] hover:text-[#F2F2F2] rounded transition-all cursor-pointer uppercase tracking-wider"
-            >
-              Salir
-            </button>
-          </form>
+          {/* Botón de Salir mediante componente interactivo con confirmación */}
+          <BotonSalirAdmin />
         </div>
       </header>
 

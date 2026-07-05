@@ -338,6 +338,7 @@ export async function obtenerResumenCaja(jornadaId: string): Promise<{
       .select(`
         comanda_id,
         numero_ticket,
+        nro_beeper,
         total,
         medio_pago,
         fecha,
@@ -364,6 +365,7 @@ export async function obtenerResumenCaja(jornadaId: string): Promise<{
       return {
         id: c.comanda_id,
         numeroTicket: c.numero_ticket,
+        beeper: c.nro_beeper,
         total: Number(c.total) || 0,
         medioPago: c.medio_pago,
         fecha: c.fecha,

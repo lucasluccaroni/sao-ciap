@@ -851,7 +851,7 @@ export default function CierrePage() {
             {/* Footer auditoría */}
             <div className="mt-6 pt-4 border-t border-[#9D9D9D]/10 flex justify-between items-center select-none shrink-0">
               <span className="text-xs text-[#9D9D9D] max-w-[400px]">
-                Desvíos resaltados en rojo. Asegúrate de verificar los números antes de confirmar la auditoría.
+                Desvíos resaltados en rojo. Asegurate de verificar los números antes de confirmar la auditoría.
               </span>
               <button
                 type="button"

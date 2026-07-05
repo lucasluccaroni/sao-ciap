@@ -27,10 +27,10 @@ El sistema está dimensionado para la operación simultánea de 4 terminales act
 Para mitigar riesgos de sobreventa y colisiones de datos en un entorno de 4 terminales, la arquitectura traslada la lógica crítica al motor de la base de datos.
 
 ### Lógica de Stock y Bloqueo Pesimista
-El sistema implementa el Procedimiento Almacenado (RPC) `procesar_comanda()`. Este procedimiento ejecuta una transacción atómica que utiliza la cláusula `FOR UPDATE` (Bloqueo Pesimista). Al recibir un pedido, el sistema bloquea las filas de los productos involucrados, valida el stock disponible (únicamente para productos con seguimiento de stock), descuenta las unidades y registra la venta. Si el stock es insuficiente, se ejecuta un Rollback inmediato, informando al operario sin corromper la base de datos.
+El sistema implementa el Procedimiento Almacenado (RPC) `procesar_comanda()`. Este procedimiento ejecuta una transacción atómica que utiliza la cláusula `FOR UPDATE` (Bloqueo Pesimista). Al recibir un pedido, el sistema realiza una pasada preliminar sobre las filas de los productos involucrados bloqueándolas y validando la disponibilidad de stock *antes* de realizar la inserción de la cabecera en la tabla `Comandas`. De esta manera, si el stock es insuficiente, se ejecuta un Rollback inmediato sin alterar ni consumir números de la secuencia autoincremental (`numero_ticket`) del ticket de barra. Si todas las validaciones son correctas, el sistema descuenta las existencias, inserta el registro de cabecera consumiendo el número de ticket y graba los ítems de venta.
 
 ### Sincronización Realtime
-Se utiliza Supabase Realtime (WebSockets) para la actualización instantánea de las interfaces de los mozos. Cuando el `stockActual` cambia en la base de datos tras una venta o reposición, todas las terminales reflejan el nuevo estado de los badges de stock sin necesidad de refrescar el navegador.
+Se utiliza Supabase Realtime (WebSockets) agregando las tablas `Comandas` y `Productos` a la publicación `supabase_realtime`. Cuando el `stockActual` cambia en la base de datos tras una venta o reposición, o se inserta una nueva comanda, todas las terminales reflejan el nuevo estado de los badges de stock y del listado de historial en tiempo real sin necesidad de refrescar el navegador.
 
 ---
 
@@ -176,7 +176,9 @@ Se realiza el cotejo financiero de Mercado Pago en el cierre:
 - **Barra de Título (56px)**: Contexto de pantalla y acciones rápidas.
 
 ### Módulo ABM de Productos (Patrón Master-Detail)
+- **Fondo y Tarjeta Central**: Posee un fondo de pantalla naranja corporativo (`bg-[#F26A1B]`) con todo el módulo administrativo flotando dentro de una gran tarjeta oscura central (`bg-[#1A1A1A]`) de bordes redondeados y sombras pronunciadas.
 - **Grilla de Productos**: Muestra el catálogo categorizado. Los productos con `activo = false` se muestran al 40% de opacidad.
+- **Barra de Filtros**: Incluye búsqueda en vivo por texto, selector por categoría, selector por clasificación de ítem («Insumos», «Productos (Vendibles Cerrados)», «Elaboración Instantánea», «Todos los Items») y un checkbox reactivo para elegir si listar o no productos inactivos/dados de baja.
 - **Formulario de Edición/Alta**:
   - Toggle de clasificación: *«Producto para la venta»* (mapea a `vendible = true`) vs. *«Insumos»* (mapea a `vendible = false`).
   - Checkbox de inventario: *«Seguimiento de stock»* (mapea a `controla_stock = true`).
@@ -185,9 +187,13 @@ Se realiza el cotejo financiero de Mercado Pago en el cierre:
 
 ### Terminal de Comandas
 - **Sidebar Izquierdo (80px)**: Selector de categorías vertical (solo categorías activas).
-- **Grilla de Productos**: Muestra tarjetas de productos con `vendible = true`. Los badges de stock dinámico solo se calculan e interactúan si `controla_stock = true`.
-- **Carrito Flotante**: Resumen del pedido y selección de medio de pago (Efectivo/MP).
+- **Grilla de Productos**: Muestra tarjetas de productos con `vendible = true`. Los badges de stock dinámico solo se calculan e interactúan si `controla_stock = true`. Al vender la última unidad, la interfaz descuenta el stock local de forma optimista e instantánea deshabilitando la tarjeta al microsegundo antes de realizar la recarga silenciosa de fondo.
+- **Carrito**: Detalle del pedido y selección de medio de pago (Efectivo/MP).
 - **Validación de Stock**: Impide la venta de artículos con `controla_stock = true` si supera el stock disponible.
+- **Scroll Adaptativo por Altura (Zoom/Pantallas Pequeñas)**: Mide mediante listener de `resize` el alto útil (`window.innerHeight`). Si este es inferior a `780px` (por zoom de 150-175% o pantallas pequeñas), desactiva las alturas fijas y el bloqueo de desborde del contenedor raíz, permitiendo scroll general de navegador, y restringe el listado de pedidos a un máximo de `max-h-[350px]` para asegurar la visibilidad total de los controles de pago e historial.
+
+### Flujo de Cierre de Sesión (Salir)
+La acción de «Salir» en cualquier terminal (empleados o administradores) es interceptada por un modal de confirmación con fondo desenfocado (`backdrop-blur-sm`) que requiere confirmación explícita mediante los botones **«Cancelar»** o **«Salir»**. En la terminal de comandas, este modal es accesible desde cualquier pantalla operativa o de bloqueo (auditoría/jornada inactiva).
 
 ---
 

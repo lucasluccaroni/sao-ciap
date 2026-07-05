@@ -40,6 +40,7 @@ DECLARE
     v_cantidad INT;
     v_precio_unitario NUMERIC(10,2);
     v_stock_actual INT;
+    v_controla_stock BOOLEAN;
     v_nombre_producto VARCHAR(255);
     v_total_comanda NUMERIC(10,2) := 0.00;
     v_jornada_estado VARCHAR(20);
@@ -57,7 +58,28 @@ BEGIN
         RAISE EXCEPTION 'La jornada no está abierta. No se admiten comandas.';
     END IF;
 
-    -- B. Crear la cabecera de la Comanda con total temporal de 0.00
+    -- B. PRIMERA PASADA: Aplicar BLOQUEO PESIMISTA y VALIDAR STOCK de todos los productos antes de insertar la cabecera
+    FOR v_item IN SELECT * FROM jsonb_to_recordset(p_items) AS x(producto_id UUID, cantidad INT)
+    LOOP
+        -- Aplicar bloqueo FOR UPDATE
+        SELECT nombre, "stockActual", controla_stock 
+        INTO v_nombre_producto, v_stock_actual, v_controla_stock
+        FROM public."Productos"
+        WHERE id = v_item.producto_id
+        FOR UPDATE;
+
+        IF NOT FOUND THEN
+            RAISE EXCEPTION 'El producto con ID % no existe.', v_item.producto_id;
+        END IF;
+
+        -- Validar stock (solo si controla_stock es TRUE)
+        IF v_controla_stock AND v_stock_actual < v_item.cantidad THEN
+            RAISE EXCEPTION 'Stock insuficiente para "%". Disponible: %, Solicitado: %.', 
+                v_nombre_producto, v_stock_actual, v_item.cantidad;
+        END IF;
+    END LOOP;
+
+    -- C. Crear la cabecera de la Comanda (ahora sí consume la secuencia autoincremental de forma segura)
     INSERT INTO public."Comandas" (
         jornada_id,
         usuario_id,
@@ -72,35 +94,25 @@ BEGIN
         0.00
     ) RETURNING comanda_id INTO v_comanda_id;
 
-    -- C. Iterar sobre cada ítem enviado en el JSONB
+    -- D. SEGUNDA PASADA: Descontar stock e insertar ítems
     FOR v_item IN SELECT * FROM jsonb_to_recordset(p_items) AS x(producto_id UUID, cantidad INT)
     LOOP
         v_producto_id := v_item.producto_id;
         v_cantidad := v_item.cantidad;
 
-        -- 1. Aplicar BLOQUEO PESIMISTA (FOR UPDATE) sobre el producto específico
-        SELECT nombre, precio, "stockActual" 
-        INTO v_nombre_producto, v_precio_unitario, v_stock_actual
+        -- Obtener precio actual y controla_stock (los bloqueos ya fueron adquiridos en la primera pasada)
+        SELECT precio, controla_stock INTO v_precio_unitario, v_controla_stock
         FROM public."Productos"
-        WHERE id = v_producto_id
-        FOR UPDATE;
-
-        IF NOT FOUND THEN
-            RAISE EXCEPTION 'El producto con ID % no existe.', v_producto_id;
-        END IF;
-
-        -- 2. Validar disponibilidad de stock
-        IF v_stock_actual < v_cantidad THEN
-            RAISE EXCEPTION 'Stock insuficiente para "%". Disponible: %, Solicitado: %.', 
-                v_nombre_producto, v_stock_actual, v_cantidad;
-        END IF;
-
-        -- 3. Descontar stock del producto
-        UPDATE public."Productos"
-        SET "stockActual" = "stockActual" - v_cantidad
         WHERE id = v_producto_id;
 
-        -- 4. Registrar el ítem histórico en la comanda
+        -- Descontar stock (solo si controla_stock es TRUE)
+        IF v_controla_stock THEN
+            UPDATE public."Productos"
+            SET "stockActual" = "stockActual" - v_cantidad
+            WHERE id = v_producto_id;
+        END IF;
+
+        -- Registrar el ítem histórico en la comanda
         INSERT INTO public."Comanda_Items" (
             comanda_id,
             producto_id,
@@ -113,16 +125,16 @@ BEGIN
             v_precio_unitario
         );
 
-        -- 5. Acumular al total de la comanda
+        -- Acumular al total de la comanda
         v_total_comanda := v_total_comanda + (v_precio_unitario * v_cantidad);
     END LOOP;
 
-    -- D. Actualizar la cabecera de la comanda con el total real calculado
+    -- E. Actualizar la cabecera de la comanda con el total real calculado
     UPDATE public."Comandas"
     SET total = v_total_comanda
     WHERE comanda_id = v_comanda_id;
 
-    -- E. Retornar el ID de la comanda procesada con éxito
+    -- F. Retornar el ID de la comanda procesada con éxito
     RETURN v_comanda_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

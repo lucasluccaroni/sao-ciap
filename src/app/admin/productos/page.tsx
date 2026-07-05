@@ -50,6 +50,8 @@ export default function ProductosPage() {
   // Filtros
   const [busqueda, setBusqueda] = useState('')
   const [categoriaFiltro, setCategoriaFiltro] = useState('')
+  const [mostrarInactivos, setMostrarInactivos] = useState(false)
+  const [tipoFiltro, setTipoFiltro] = useState<'todos' | 'insumos' | 'productos' | 'elaboracion'>('todos')
 
   // Modales de Productos
   const [modalProdOpen, setModalProdOpen] = useState(false)
@@ -382,7 +384,14 @@ export default function ProductosPage() {
   const productosFiltrados = productos.filter(p => {
     const cumpleBusqueda = p.nombre.toLowerCase().includes(busqueda.toLowerCase())
     const cumpleCategoria = categoriaFiltro === '' || p.categoria_id === categoriaFiltro
-    return cumpleBusqueda && cumpleCategoria
+    const cumpleEstado = mostrarInactivos || p.activo
+    const cumpleTipo = tipoFiltro === 'todos' || (
+      tipoFiltro === 'insumos' ? !p.vendible :
+      tipoFiltro === 'productos' ? (p.vendible && p.controla_stock) :
+      tipoFiltro === 'elaboracion' ? (p.vendible && !p.controla_stock) :
+      true
+    )
+    return cumpleBusqueda && cumpleCategoria && cumpleEstado && cumpleTipo
   })
 
   // Helper para formatear moneda ARS sin decimales superfluos
@@ -396,95 +405,126 @@ export default function ProductosPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col p-6 min-h-0 select-none bg-[#080A0D]">
+    <div className="flex-1 flex flex-col p-6 min-h-0 select-none bg-[#F26A1B] overflow-hidden">
       
-      {/* Mensajes de feedback superior */}
-      {errorMsg && (
-        <div className="mb-4 p-4 rounded bg-red-950/40 border border-red-700/60 text-red-200 text-sm flex items-center justify-between">
-          <span>{errorMsg}</span>
-          <button onClick={() => setErrorMsg('')} className="text-red-400 hover:text-red-200 font-bold ml-2">X</button>
-        </div>
-      )}
-
-      {successMsg && (
-        <div className="mb-4 p-4 rounded bg-emerald-950/40 border border-emerald-700/60 text-emerald-200 text-sm flex items-center justify-between">
-          <span>{successMsg}</span>
-          <button onClick={() => setSuccessMsg('')} className="text-emerald-400 hover:text-emerald-200 font-bold ml-2">X</button>
-        </div>
-      )}
-
-      {/* Cabecera / Barra de Controles */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div className="flex flex-col">
-          <h1 className="text-2xl font-bold text-[#F2F2F2]">Gestión de Productos</h1>
-          <p className="text-xs text-[#9D9D9D]">Administra el catálogo de productos, existencias base y categorías.</p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => {
-              setCatErrorMsg('')
-              setModalCatOpen(true)
-            }}
-            className="px-4 py-2 border border-[#BA7517]/20 bg-[#BA7517]/20 hover:bg-[#BA7517]/40 text-xs font-semibold text-[#F2F2F2] rounded transition-all cursor-pointer uppercase tracking-wider h-10"
-          >
-            Gestionar Categorías
-          </button>
-          <button
-            onClick={abrirCrearProducto}
-            className="px-4 py-2 bg-[#F26A1B] hover:bg-[#F25922] text-[#F2F2F2] text-xs font-bold rounded transition-all cursor-pointer uppercase tracking-wider h-10 flex items-center justify-center animate-pulse-subtle"
-          >
-            Nuevo Producto
-          </button>
-        </div>
-      </div>
-
-      {/* Filtros e Información de Resumen */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded border border-[#9D9D9D]/15 bg-[#1A1A1A]/90 mb-6">
+      {/* Contenedor Principal Oscuro Flotante */}
+      <div className="flex-1 flex flex-col bg-[#1A1A1A] border border-white/10 rounded-2xl p-6 shadow-2xl min-h-0 overflow-hidden">
         
-        {/* Filtros Izquierda */}
-        <div className="flex flex-1 flex-col sm:flex-row gap-3">
-          {/* Buscador de Texto */}
-          <div className="relative flex-1">
-            <input
-              type="text"
-              placeholder="Buscar producto por nombre..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              className="w-full h-10 bg-[#080A0D] border border-[#9D9D9D]/15 rounded px-4 text-sm text-[#F2F2F2] placeholder-[#9D9D9D]/60 focus:outline-none focus:border-[#30CFF2]/60 transition-all"
-            />
+        {/* Mensajes de feedback superior */}
+        {errorMsg && (
+          <div className="mb-4 p-4 rounded bg-red-950/40 border border-red-700/60 text-red-200 text-sm flex items-center justify-between">
+            <span>{errorMsg}</span>
+            <button onClick={() => setErrorMsg('')} className="text-red-400 hover:text-red-200 font-bold ml-2">X</button>
+          </div>
+        )}
+
+        {successMsg && (
+          <div className="mb-4 p-4 rounded bg-emerald-950/40 border border-emerald-700/60 text-emerald-200 text-sm flex items-center justify-between">
+            <span>{successMsg}</span>
+            <button onClick={() => setSuccessMsg('')} className="text-emerald-400 hover:text-emerald-200 font-bold ml-2">X</button>
+          </div>
+        )}
+
+        {/* Cabecera / Barra de Controles */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div className="flex flex-col">
+            <h1 className="text-2xl font-bold text-[#F2F2F2]">Gestión de Productos</h1>
+            <p className="text-xs text-[#9D9D9D]">Administra el catálogo de productos, existencias base y categorías.</p>
           </div>
 
-          {/* Filtro Categoría */}
-          <div className="w-full sm:w-56">
-            <select
-              value={categoriaFiltro}
-              onChange={(e) => setCategoriaFiltro(e.target.value)}
-              className="w-full h-10 bg-[#080A0D] border border-[#9D9D9D]/15 rounded px-3 text-sm text-[#F2F2F2] focus:outline-none focus:border-[#30CFF2]/60 transition-all cursor-pointer"
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                setCatErrorMsg('')
+                setModalCatOpen(true)
+              }}
+              className="px-4 py-2 border border-[#BA7517]/20 bg-[#BA7517]/20 hover:bg-[#BA7517]/40 text-xs font-semibold text-[#F2F2F2] rounded transition-all cursor-pointer uppercase tracking-wider h-10"
             >
-              <option value="">Todas las Categorías</option>
-              {categorias.map(cat => (
-                <option key={cat.id} value={cat.id}>{cat.nombre}</option>
-              ))}
-            </select>
+              Gestionar Categorías
+            </button>
+            <button
+              onClick={abrirCrearProducto}
+              className="px-4 py-2 bg-[#F26A1B] hover:bg-[#F25922] text-[#F2F2F2] text-xs font-bold rounded transition-all cursor-pointer uppercase tracking-wider h-10 flex items-center justify-center"
+            >
+              Nuevo Producto
+            </button>
           </div>
         </div>
 
-        {/* Resumen Derecha */}
-        <div className="flex items-center gap-4 text-xs font-semibold text-[#9D9D9D] px-2 shrink-0">
-          <div>
-            Total en Catálogo: <span className="text-[#F2F2F2]">{productos.length}</span>
+        {/* Filtros e Información de Resumen */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded border border-[#9D9D9D]/15 bg-[#080A0D]/50 mb-6">
+          
+          {/* Filtros Izquierda */}
+          <div className="flex flex-1 flex-col sm:flex-row gap-3 items-center">
+            {/* Buscador de Texto */}
+            <div className="relative flex-1 w-full">
+              <input
+                type="text"
+                placeholder="Buscar producto por nombre..."
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                className="w-full h-10 bg-[#080A0D] border border-[#9D9D9D]/15 rounded px-4 text-sm text-[#F2F2F2] placeholder-[#9D9D9D]/60 focus:outline-none focus:border-[#30CFF2]/60 transition-all"
+              />
+            </div>
+
+            {/* Filtro Categoría */}
+            <div className="w-full sm:w-52">
+              <select
+                value={categoriaFiltro}
+                onChange={(e) => setCategoriaFiltro(e.target.value)}
+                className="w-full h-10 bg-[#080A0D] border border-[#9D9D9D]/15 rounded px-3 text-sm text-[#F2F2F2] focus:outline-none focus:border-[#30CFF2]/60 transition-all cursor-pointer"
+              >
+                <option value="">Todas las Categorías</option>
+                {categorias.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.nombre}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Filtro Tipo de Producto */}
+            <div className="w-full sm:w-56">
+              <select
+                value={tipoFiltro}
+                onChange={(e) => setTipoFiltro(e.target.value as any)}
+                className="w-full h-10 bg-[#080A0D] border border-[#9D9D9D]/15 rounded px-3 text-sm text-[#F2F2F2] focus:outline-none focus:border-[#30CFF2]/60 transition-all cursor-pointer"
+              >
+                <option value="todos">Todos los Items</option>
+                <option value="insumos">Insumos (No Vendibles)</option>
+                <option value="productos">Productos (Vendibles Cerrados)</option>
+                <option value="elaboracion">Elaboración Instantánea</option>
+              </select>
+            </div>
+
+            {/* Checkbox Mostrar Inactivos */}
+            <div className="flex items-center gap-2 px-2 select-none shrink-0 h-10">
+              <input
+                id="checkbox_inactivos"
+                type="checkbox"
+                checked={mostrarInactivos}
+                onChange={(e) => setMostrarInactivos(e.target.checked)}
+                className="w-4 h-4 bg-[#080A0D] border border-[#9D9D9D]/30 rounded text-[#30CFF2] focus:ring-0 cursor-pointer accent-[#F26A1B]"
+              />
+              <label htmlFor="checkbox_inactivos" className="text-xs font-semibold text-[#F2F2F2] cursor-pointer">
+                Mostrar inactivos / dados de baja
+              </label>
+            </div>
           </div>
-          <div className="h-4 w-[1px] bg-[#9D9D9D]/15"></div>
-          <div>
-            Filtrados: <span className="text-[#30CFF2]">{productosFiltrados.length}</span>
+
+          {/* Resumen Derecha */}
+          <div className="flex items-center gap-4 text-xs font-semibold text-[#9D9D9D] px-2 shrink-0">
+            <div>
+              Total en Catálogo: <span className="text-[#F2F2F2]">{productos.length}</span>
+            </div>
+            <div className="h-4 w-[1px] bg-[#9D9D9D]/15"></div>
+            <div>
+              Filtrados: <span className="text-[#30CFF2]">{productosFiltrados.length}</span>
+            </div>
           </div>
+
         </div>
 
-      </div>
-
-      {/* Tabla de Productos */}
-      <div className="flex-1 overflow-auto rounded border border-[#9D9D9D]/15 bg-[#1A1A1A]/40">
+        {/* Tabla de Productos */}
+        <div className="flex-1 overflow-auto rounded border border-[#9D9D9D]/15 bg-[#080A0D]/50">
         {loading && productos.length === 0 ? (
           <div className="h-40 flex items-center justify-center text-sm text-[#9D9D9D]">Cargando catálogo...</div>
         ) : productosFiltrados.length === 0 ? (
@@ -1135,6 +1175,7 @@ export default function ProductosPage() {
         </div>
       )}
 
+      </div> {/* Fin Contenedor Principal Oscuro Flotante */}
     </div>
   )
 }
