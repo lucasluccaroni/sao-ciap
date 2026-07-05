@@ -38,6 +38,7 @@ interface ProductoAuditoriaLocal {
   unidadesVendidas: number
   stockTeorico: number
   conteoFisico?: number
+  vendible: boolean
 }
 
 export default function CierrePage() {
@@ -275,6 +276,20 @@ export default function CierrePage() {
     )
   }
 
+  const handleUnidadesUtilizadasChange = (prodId: string, val: string) => {
+    const numVal = val === '' ? 0 : Math.max(0, Number(val))
+    
+    setProductosAuditoria(
+      productosAuditoria.map((p) => {
+        if (p.id === prodId) {
+          const stockTeorico = Math.max(0, p.stockInicial - numVal)
+          return { ...p, unidadesVendidas: numVal, stockTeorico }
+        }
+        return p
+      })
+    )
+  }
+
   const guardarAuditoriaYAvanzar = async () => {
     if (!jornada) return
     setErrorMsg('')
@@ -292,9 +307,10 @@ export default function CierrePage() {
       const conteos = productosAuditoria.map((p) => ({
         producto_id: p.id,
         conteo_fisico: p.conteoFisico || 0,
+        unidades_utilizadas: p.unidadesVendidas || 0,
       }))
 
-      // Guardar conteos físicos en base de datos
+      // Guardar conteos físicos y unidades utilizadas en base de datos
       const resAud = await registrarConteosAuditoria(jornada.jornada_id, conteos)
 
       if (!resAud.success) {
@@ -760,7 +776,7 @@ export default function CierrePage() {
                 <thead>
                   <tr className="border-b border-[#080A0D]/50 text-xs text-[#9D9D9D] font-bold uppercase tracking-wider select-none">
                     <th className="pb-3.5 pl-3">Nombre Producto</th>
-                    <th className="pb-3.5 text-center">Unid. Vendidas</th>
+                    <th className="pb-3.5 text-center">Unid. Vendidas / Utilizadas</th>
                     <th className="pb-3.5 text-center">Stock Teórico</th>
                     <th className="pb-3.5 text-center w-36">Conteo Físico</th>
                     <th className="pb-3.5 text-right pr-3">Desvío</th>
@@ -779,8 +795,30 @@ export default function CierrePage() {
                           tieneDesvio ? 'bg-[#E2484A]/5' : ''
                         }`}
                       >
-                        <td className="py-3 pl-3 font-semibold text-[#F2F2F2]">{p.nombre}</td>
-                        <td className="py-3 text-center text-[#9D9D9D]">{p.unidadesVendidas} u.</td>
+                        <td className="py-3 pl-3 font-semibold text-[#F2F2F2]">
+                          <div className="flex flex-col gap-0.5">
+                            <span>{p.nombre}</span>
+                            {!p.vendible && (
+                              <span className="text-[9px] text-[#9D9D9D] uppercase font-bold tracking-wider select-none">Insumo</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3 text-center">
+                          {!p.vendible ? (
+                            <div className="inline-flex items-center gap-1.5">
+                              <input
+                                type="number"
+                                value={p.unidadesVendidas}
+                                onChange={(e) => handleUnidadesUtilizadasChange(p.id, e.target.value)}
+                                className="w-20 h-9 px-2 bg-[#080A0D] border border-[#9D9D9D]/30 focus:border-[#F25922] focus:ring-1 focus:ring-[#F25922]/20 text-center font-bold text-sm text-[#F2F2F2] rounded-md focus:outline-none"
+                                min="0"
+                              />
+                              <span className="text-[10px] text-[#9D9D9D] font-semibold">u.</span>
+                            </div>
+                          ) : (
+                            <span className="text-[#9D9D9D]">{p.unidadesVendidas} u.</span>
+                          )}
+                        </td>
                         <td className="py-3 text-center text-[#9D9D9D]">{p.stockTeorico} u.</td>
                         <td className="py-3 text-center">
                           <input
@@ -788,7 +826,7 @@ export default function CierrePage() {
                             value={p.conteoFisico === undefined ? '' : p.conteoFisico}
                             onChange={(e) => handleConteoChange(p.id, e.target.value)}
                             placeholder="Ingrese..."
-                            className="w-24 h-9 px-3 bg-[#1A1A1A] border border-[#9D9D9D]/30 focus:border-[#F25922] focus:ring-1 focus:ring-[#F25922]/20 text-center font-bold text-sm text-[#F2F2F2] rounded-md focus:outline-none placeholder-[#9D9D9D]/40"
+                            className="w-24 h-9 px-3 bg-[#080A0D] border border-[#9D9D9D]/30 focus:border-[#F25922] focus:ring-1 focus:ring-[#F25922]/20 text-center font-bold text-sm text-[#F2F2F2] rounded-md focus:outline-none placeholder-[#9D9D9D]/40"
                             min="0"
                           />
                         </td>

@@ -222,6 +222,8 @@ export async function obtenerProductos(): Promise<{
     stockActual: number
     unidad: string
     activo: boolean
+    vendible: boolean
+    controla_stock: boolean
     created_at: string
     Categorias_Productos?: {
       nombre: string
@@ -265,6 +267,8 @@ export async function crearProducto(datos: {
   stockInicial: number
   unidad: 'u' | 'lt' | 'ml'
   activo?: boolean
+  vendible: boolean
+  controla_stock: boolean
 }): Promise<{ success: boolean; error?: string; producto?: any }> {
   try {
     const supabase = await createClient()
@@ -281,8 +285,8 @@ export async function crearProducto(datos: {
       return { success: false, error: 'El stock no puede ser negativo.' }
     }
 
-    // Validar que la categoria este activa si el producto se crea como activo
-    if (datos.activo !== false) {
+    // Validar que la categoria este activa si el producto se crea como activo y vendible
+    if (datos.activo !== false && datos.vendible) {
       const { data: categoria, error: catError } = await supabase
         .from('Categorias_Productos')
         .select('activo')
@@ -307,7 +311,9 @@ export async function crearProducto(datos: {
         stockInicial: datos.stockInicial,
         stockActual: datos.stockInicial, // El stock actual se inicializa con el inicial
         unidad: datos.unidad,
-        activo: datos.activo ?? true
+        activo: datos.activo ?? true,
+        vendible: datos.vendible,
+        controla_stock: datos.controla_stock
       })
       .select()
       .single()
@@ -330,6 +336,8 @@ export async function actualizarProducto(
     stockActual: number
     unidad: 'u' | 'lt' | 'ml'
     activo: boolean
+    vendible: boolean
+    controla_stock: boolean
   }
 ): Promise<{ success: boolean; error?: string; producto?: any }> {
   try {
@@ -350,8 +358,8 @@ export async function actualizarProducto(
       return { success: false, error: 'El stock actual no puede ser negativo.' }
     }
 
-    // Validar que la categoria este activa si el producto se actualiza a activo
-    if (datos.activo) {
+    // Validar que la categoria este activa si el producto se actualiza a activo y es vendible
+    if (datos.activo && datos.vendible) {
       const { data: categoria, error: catError } = await supabase
         .from('Categorias_Productos')
         .select('activo')
@@ -375,7 +383,9 @@ export async function actualizarProducto(
         stockIdeal: datos.stockIdeal,
         stockActual: datos.stockActual,
         unidad: datos.unidad,
-        activo: datos.activo
+        activo: datos.activo,
+        vendible: datos.vendible,
+        controla_stock: datos.controla_stock
       })
       .eq('id', id)
       .select()

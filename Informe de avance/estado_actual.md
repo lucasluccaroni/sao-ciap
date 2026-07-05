@@ -30,17 +30,19 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
     - [x] `obtenerJornadaActiva` — lectura de jornada activa para inicializacion de terminales
     - [x] `abrirJornada` — insercion con control de duplicado via restriccion unica
     - [x] `iniciarAuditoria` — transicion de estado `abierta` a `en_auditoria`
-    - [x] `registrarConteosAuditoria` — patron delete+insert en tabla `Auditoria_Inventario`
-    - [x] `cerrarJornada` — invoca RPC SQL `cerrar_jornada` para balance atomico
+    - [x] `registrarConteosAuditoria` — persiste conteos físicos y unidades utilizadas reales
+    - [x] `cerrarJornada` — invoca RPC SQL `cerrar_jornada` para balance atomico y consolidación de stock físico en el catálogo
     - [x] Server Actions de Productos y Categorías (`src/app/actions/productos.ts`) para consultas y modificaciones
-- [x] Agregar funcion SQL RPC `cerrar_jornada` a `database/triggers.sql`
+- [x] Agregar funcion SQL RPC `cerrar_jornada` a `database/triggers.sql` (Consolidación atómica de finanzas y stock físico en Productos)
 
 ### 4. Frontend / UI
 - [/] Implementar pantallas segun disenos en `/design`
     - [x] Pantalla de Login (Maquetado e integración de acciones completados; pendiente copia local de assets por parte del usuario)
-    - [x] Panel de Control de Jornada (Layout de administración, Caja del Día y flujo secuencial de Cierre de Caja completados en código)
+    - [x] Panel de Control de Jornada (Layout de administración, Caja del Día, Carga de Gastos y flujo secuencial de Cierre de Caja completados en código)
+        - [x] Habilitación de la edición manual de consumo de insumos en la auditoría física, recalculando el stock teórico reactivamente.
     - [x] ABM de Productos y Gestión de Categorías (Pantalla en `/admin/productos`, modales de nuevo/editar, confirmación de baja y gestión de categorías completados en código)
-    - [ ] Interfaz Principal de Ventas
+        - [x] Clasificación de productos (Toggle: Ventas/Insumos) y Checkbox reactivo de Seguimiento de Stock.
+    - [ ] Interfaz Principal de Ventas (Toma de Comandas)
 
 ---
 
@@ -74,6 +76,8 @@ La base de datos se estructurará de la siguiente manera:
     *   `stockActual` INTEGER (Default 0)
     *   `unidad` VARCHAR(10) (Constraint: 'u', 'lt', 'ml')
     *   `activo` BOOLEAN (Default true)
+    *   `vendible` BOOLEAN (Default true)
+    *   `controla_stock` BOOLEAN (Default true)
 5.  **`Jornadas`**:
     *   `jornada_id` UUID PK
     *   `estado` VARCHAR(20) (Constraint: 'abierta', 'en_auditoria', 'cerrada')
@@ -107,6 +111,7 @@ La base de datos se estructurará de la siguiente manera:
     *   `jornada_id` UUID (FK a `Jornadas`)
     *   `producto_id` UUID (FK a `Productos`)
     *   `conteo_fisico` INTEGER
+    *   `unidades_utilizadas` INTEGER (Default 0)
 
 ---
 

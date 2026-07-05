@@ -195,5 +195,14 @@ BEGIN
         ganancia_neta  = v_ganancia_neta
     WHERE jornada_id = p_jornada_id;
 
+    -- F. Actualizar el stock actual e inicial de los productos auditados con el conteo físico real
+    UPDATE public."Productos" p
+    SET 
+        "stockActual" = a.conteo_fisico,
+        "stockInicial" = a.conteo_fisico
+    FROM public."Auditoria_Inventario" a
+    WHERE a.jornada_id = p_jornada_id 
+      AND a.producto_id = p.id;
+
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

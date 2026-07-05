@@ -30,6 +30,8 @@ interface Producto {
   stockActual: number
   unidad: 'u' | 'lt' | 'ml'
   activo: boolean
+  vendible: boolean
+  controla_stock: boolean
   Categorias_Productos?: {
     nombre: string
     color_fondo: string
@@ -60,7 +62,9 @@ export default function ProductosPage() {
     stockActual: '',
     stockIdeal: '',
     unidad: 'u' as 'u' | 'lt' | 'ml',
-    activo: true
+    activo: true,
+    vendible: true,
+    controla_stock: true
   })
 
   // Modal Confirmar Baja Producto
@@ -131,7 +135,9 @@ export default function ProductosPage() {
       stockActual: '0',
       stockIdeal: '0',
       unidad: 'u',
-      activo: true
+      activo: true,
+      vendible: true,
+      controla_stock: true
     })
     setModalProdOpen(true)
   }
@@ -146,7 +152,9 @@ export default function ProductosPage() {
       stockActual: prod.stockActual.toString(),
       stockIdeal: prod.stockIdeal.toString(),
       unidad: prod.unidad,
-      activo: prod.activo
+      activo: prod.activo,
+      vendible: prod.vendible,
+      controla_stock: prod.controla_stock
     })
     setModalProdOpen(true)
   }
@@ -195,7 +203,9 @@ export default function ProductosPage() {
           stockIdeal: stockIdealNum,
           stockActual: stockActualNum,
           unidad: prodForm.unidad,
-          activo: prodForm.activo
+          activo: prodForm.activo,
+          vendible: prodForm.vendible,
+          controla_stock: prodForm.controla_stock
         })
 
         if (res.success) {
@@ -220,7 +230,9 @@ export default function ProductosPage() {
           stockIdeal: stockIdealNum,
           stockInicial: stockInicialNum,
           unidad: prodForm.unidad,
-          activo: prodForm.activo
+          activo: prodForm.activo,
+          vendible: prodForm.vendible,
+          controla_stock: prodForm.controla_stock
         })
 
         if (res.success) {
@@ -520,8 +532,22 @@ export default function ProductosPage() {
                     </td>
 
                     {/* Nombre del Producto */}
-                    <td className="py-3 px-4 font-medium text-[#F2F2F2]">
-                      {prod.nombre}
+                    <td className="py-3 px-4">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-medium text-[#F2F2F2]">{prod.nombre}</span>
+                        <div className="flex gap-1.5 flex-wrap">
+                          {!prod.vendible && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-neutral-800 border border-neutral-700 text-[#9D9D9D] font-bold tracking-wider uppercase select-none">
+                              Insumo
+                            </span>
+                          )}
+                          {!prod.controla_stock && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-950/30 border border-yellow-800/30 text-yellow-500 font-bold tracking-wider uppercase select-none">
+                              Sin Seguimiento
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </td>
 
                     {/* Precio */}
@@ -535,21 +561,29 @@ export default function ProductosPage() {
                     </td>
 
                     {/* Stock Actual */}
-                    <td className={`py-3 px-4 text-right font-semibold ${esBajoStock && prod.activo ? 'text-[#FF4A4A]' : 'text-[#30CFF2]'}`}>
-                      {prod.stockActual}
-                      {esBajoStock && prod.activo && (
-                        <span className="block text-[10px] font-medium text-[#FF4A4A] tracking-tight">¡Stock Bajo!</span>
+                    <td className="py-3 px-4 text-right font-semibold">
+                      {prod.controla_stock ? (
+                        <>
+                          <span className={esBajoStock && prod.activo ? 'text-[#FF4A4A]' : 'text-[#30CFF2]'}>
+                            {prod.stockActual}
+                          </span>
+                          {esBajoStock && prod.activo && (
+                            <span className="block text-[10px] font-medium text-[#FF4A4A] tracking-tight">¡Stock Bajo!</span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-neutral-600 font-normal">—</span>
                       )}
                     </td>
 
                     {/* Stock Ideal */}
                     <td className="py-3 px-4 text-right font-semibold text-[#F2F2F2]">
-                      {prod.stockIdeal}
+                      {prod.controla_stock ? prod.stockIdeal : <span className="text-neutral-600 font-normal">—</span>}
                     </td>
 
                     {/* Stock Inicial */}
                     <td className="py-3 px-4 text-right font-semibold text-[#F2F2F2]">
-                      {prod.stockInicial}
+                      {prod.controla_stock ? prod.stockInicial : <span className="text-neutral-600 font-normal">—</span>}
                     </td>
 
                     {/* Estado Activo / Inactivo */}
@@ -654,6 +688,61 @@ export default function ProductosPage() {
                   </select>
                 </div>
 
+                {/* Tipo de Producto (Toggle vendible) */}
+                <div>
+                  <label className="block text-xs font-semibold text-[#9D9D9D] uppercase tracking-wider mb-2">
+                    Tipo de Producto
+                  </label>
+                  <div className="grid grid-cols-2 p-1 bg-[#080A0D] border border-[#9D9D9D]/15 rounded-lg select-none">
+                    <button
+                      type="button"
+                      onClick={() => setProdForm({ ...prodForm, vendible: true })}
+                      className={`py-2 px-3 text-xs font-bold rounded-md uppercase tracking-wider transition-all cursor-pointer ${
+                        prodForm.vendible
+                          ? 'bg-[#F26A1B] text-[#F2F2F2] shadow-sm'
+                          : 'text-[#9D9D9D] hover:text-[#F2F2F2] bg-transparent'
+                      }`}
+                    >
+                      Producto para la Venta
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setProdForm({ ...prodForm, vendible: false, controla_stock: true })}
+                      className={`py-2 px-3 text-xs font-bold rounded-md uppercase tracking-wider transition-all cursor-pointer ${
+                        !prodForm.vendible
+                          ? 'bg-[#F26A1B] text-[#F2F2F2] shadow-sm'
+                          : 'text-[#9D9D9D] hover:text-[#F2F2F2] bg-transparent'
+                      }`}
+                    >
+                      Insumo
+                    </button>
+                  </div>
+                </div>
+
+                {/* Control de Inventario (Seguimiento de Stock) */}
+                <div className="flex items-center gap-3 pt-1">
+                  <input
+                    type="checkbox"
+                    id="controlStockCheck"
+                    disabled={!prodForm.vendible}
+                    checked={prodForm.controla_stock}
+                    onChange={(e) => setProdForm({ ...prodForm, controla_stock: e.target.checked })}
+                    className={`w-4 h-4 rounded border-[#9D9D9D]/15 bg-[#080A0D] accent-[#30CFF2] cursor-pointer ${
+                      !prodForm.vendible ? 'opacity-40 cursor-not-allowed' : ''
+                    }`}
+                  />
+                  <div className="flex flex-col">
+                    <label htmlFor="controlStockCheck" className={`text-xs font-semibold text-[#F2F2F2] cursor-pointer select-none ${
+                      !prodForm.vendible ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}>
+                      Seguimiento de Stock
+                    </label>
+                    {!prodForm.vendible && (
+                      <span className="text-[10px] text-[#9D9D9D]/70 mt-0.5">Los insumos siempre requieren seguimiento de stock.</span>
+                    )}
+                  </div>
+                </div>
+
                 {/* Fila: Precio y Unidad */}
                 <div className="grid grid-cols-2 gap-4">
                   {/* Precio */}
@@ -689,49 +778,55 @@ export default function ProductosPage() {
                   </div>
                 </div>
 
-                {/* Fila: Stock (Inicial o Actual) y Stock Ideal */}
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Stock */}
-                  <div>
-                    <label className="block text-xs font-semibold text-[#9D9D9D] uppercase tracking-wider mb-1">
-                      {prodEditando ? 'Stock Actual' : 'Stock Inicial'}
-                    </label>
-                    {prodEditando ? (
-                      <input
-                        type="number"
-                        required
-                        value={prodForm.stockActual}
-                        onChange={(e) => setProdForm({ ...prodForm, stockActual: e.target.value })}
-                        className="w-full h-10 bg-[#080A0D] border border-[#9D9D9D]/15 rounded px-4 text-sm text-[#F2F2F2] focus:outline-none focus:border-[#30CFF2]/60 transition-all"
-                        placeholder="0"
-                      />
-                    ) : (
-                      <input
-                        type="number"
-                        required
-                        value={prodForm.stockInicial}
-                        onChange={(e) => setProdForm({ ...prodForm, stockInicial: e.target.value })}
-                        className="w-full h-10 bg-[#080A0D] border border-[#9D9D9D]/15 rounded px-4 text-sm text-[#F2F2F2] focus:outline-none focus:border-[#30CFF2]/60 transition-all"
-                        placeholder="0"
-                      />
-                    )}
-                  </div>
+                {/* Fila: Stock (Inicial o Actual) y Stock Ideal (Solo si controla_stock es true) */}
+                {prodForm.controla_stock ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Stock */}
+                    <div>
+                      <label className="block text-xs font-semibold text-[#9D9D9D] uppercase tracking-wider mb-1">
+                        {prodEditando ? 'Stock Actual' : 'Stock Inicial'}
+                      </label>
+                      {prodEditando ? (
+                        <input
+                          type="number"
+                          required
+                          value={prodForm.stockActual}
+                          onChange={(e) => setProdForm({ ...prodForm, stockActual: e.target.value })}
+                          className="w-full h-10 bg-[#080A0D] border border-[#9D9D9D]/15 rounded px-4 text-sm text-[#F2F2F2] focus:outline-none focus:border-[#30CFF2]/60 transition-all"
+                          placeholder="0"
+                        />
+                      ) : (
+                        <input
+                          type="number"
+                          required
+                          value={prodForm.stockInicial}
+                          onChange={(e) => setProdForm({ ...prodForm, stockInicial: e.target.value })}
+                          className="w-full h-10 bg-[#080A0D] border border-[#9D9D9D]/15 rounded px-4 text-sm text-[#F2F2F2] focus:outline-none focus:border-[#30CFF2]/60 transition-all"
+                          placeholder="0"
+                        />
+                      )}
+                    </div>
 
-                  {/* Stock Ideal */}
-                  <div>
-                    <label className="block text-xs font-semibold text-[#9D9D9D] uppercase tracking-wider mb-1">
-                      Stock Ideal
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      value={prodForm.stockIdeal}
-                      onChange={(e) => setProdForm({ ...prodForm, stockIdeal: e.target.value })}
-                      className="w-full h-10 bg-[#080A0D] border border-[#9D9D9D]/15 rounded px-4 text-sm text-[#F2F2F2] focus:outline-none focus:border-[#30CFF2]/60 transition-all"
-                      placeholder="0"
-                    />
+                    {/* Stock Ideal */}
+                    <div>
+                      <label className="block text-xs font-semibold text-[#9D9D9D] uppercase tracking-wider mb-1">
+                        Stock Ideal
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        value={prodForm.stockIdeal}
+                        onChange={(e) => setProdForm({ ...prodForm, stockIdeal: e.target.value })}
+                        className="w-full h-10 bg-[#080A0D] border border-[#9D9D9D]/15 rounded px-4 text-sm text-[#F2F2F2] focus:outline-none focus:border-[#30CFF2]/60 transition-all"
+                        placeholder="0"
+                      />
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="p-3.5 bg-[#080A0D] border border-[#9D9D9D]/10 rounded text-xs text-[#9D9D9D] leading-relaxed">
+                    Este producto de elaboración instantánea no realiza seguimiento de existencias en las ventas ni requiere auditoría física de stock durante el cierre.
+                  </div>
+                )}
 
                 {/* Activo / Inactivo */}
                 <div className="flex items-center gap-3 pt-2">
@@ -743,7 +838,7 @@ export default function ProductosPage() {
                     className="w-4 h-4 rounded border-[#9D9D9D]/15 bg-[#080A0D] accent-[#30CFF2] cursor-pointer"
                   />
                   <label htmlFor="activoCheck" className="text-xs font-semibold text-[#F2F2F2] cursor-pointer select-none">
-                    Producto Activo (Disponible para la venta)
+                    Producto Activo
                   </label>
                 </div>
 

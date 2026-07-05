@@ -197,7 +197,7 @@ export async function iniciarAuditoria(
  */
 export async function registrarConteosAuditoria(
   jornadaId: string,
-  conteos: { producto_id: string; conteo_fisico: number }[]
+  conteos: { producto_id: string; conteo_fisico: number; unidades_utilizadas: number }[]
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = await createClient()
@@ -237,6 +237,7 @@ export async function registrarConteosAuditoria(
       jornada_id: jornadaId,
       producto_id: c.producto_id,
       conteo_fisico: c.conteo_fisico,
+      unidades_utilizadas: c.unidades_utilizadas,
     }))
 
     const { error: insertError } = await supabase
@@ -460,6 +461,7 @@ export async function obtenerProductosAuditoria(jornadaId: string): Promise<{
     unidadesVendidas: number
     stockTeorico: number
     conteoFisico?: number
+    vendible: boolean
   }[]
 }> {
   try {
@@ -467,15 +469,16 @@ export async function obtenerProductosAuditoria(jornadaId: string): Promise<{
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) return { success: false, error: 'Usuario no autenticado.' }
 
-    // 1. Obtener todos los productos activos
+    // 1. Obtener todos los productos activos con controla_stock = true
     const { data: dbProductos, error: prodError } = await supabase
       .from('Productos')
-      .select('id, nombre, stockInicial')
+      .select('id, nombre, stockInicial, vendible')
       .eq('activo', true)
+      .eq('controla_stock', true)
 
     if (prodError) return { success: false, error: prodError.message }
 
-    // 2. Obtener sumatoria de unidades vendidas por producto en esta jornada
+    // 2. Obtener sumatoria de unidades vendidas por producto en esta jornada desde comandas
     const { data: dbVendidos, error: vendError } = await supabase
       .from('Comanda_Items')
       .select('producto_id, cantidad, Comandas!inner(jornada_id)')
@@ -491,23 +494,35 @@ export async function obtenerProductosAuditoria(jornadaId: string): Promise<{
       ventasAgrupadas[prodId] = (ventasAgrupadas[prodId] || 0) + cant
     })
 
-    // 3. Obtener conteos físicos ya registrados en esta jornada (si existen)
+    // 3. Obtener conteos físicos y unidades utilizadas ya registradas en esta jornada (si existen)
     const { data: dbConteos, error: contError } = await supabase
       .from('Auditoria_Inventario')
-      .select('producto_id, conteo_fisico')
+      .select('producto_id, conteo_fisico, unidades_utilizadas')
       .eq('jornada_id', jornadaId)
 
-    const conteosExistentes: Record<string, number> = {}
+    const conteosExistentes: Record<string, { conteo_fisico: number; unidades_utilizadas: number }> = {}
     dbConteos?.forEach((item) => {
-      conteosExistentes[item.producto_id] = Number(item.conteo_fisico)
+      conteosExistentes[item.producto_id] = {
+        conteo_fisico: Number(item.conteo_fisico),
+        unidades_utilizadas: Number(item.unidades_utilizadas) || 0
+      }
     })
 
-    // 4. Armar el listado final calculando desvíos y ordenando por ventas desc
+    // 4. Armar el listado final calculando desvíos e inicializando según tipo
     const resultado = dbProductos.map((p) => {
-      const unidadesVendidas = ventasAgrupadas[p.id] || 0
       const stockInicial = Number(p.stockInicial) || 0
+      const tieneRegistroPrevio = conteosExistentes[p.id] !== undefined
+
+      let unidadesVendidas = 0
+      if (tieneRegistroPrevio) {
+        unidadesVendidas = conteosExistentes[p.id].unidades_utilizadas
+      } else {
+        // Al inicio, los productos comunes leen de comandas, los insumos empiezan en 0
+        unidadesVendidas = p.vendible ? (ventasAgrupadas[p.id] || 0) : 0
+      }
+
       const stockTeorico = Math.max(0, stockInicial - unidadesVendidas)
-      const conteoFisico = conteosExistentes[p.id] !== undefined ? conteosExistentes[p.id] : undefined
+      const conteoFisico = tieneRegistroPrevio ? conteosExistentes[p.id].conteo_fisico : undefined
 
       return {
         id: p.id,
@@ -516,10 +531,11 @@ export async function obtenerProductosAuditoria(jornadaId: string): Promise<{
         unidadesVendidas,
         stockTeorico,
         conteoFisico,
+        vendible: p.vendible
       }
     })
 
-    // Ordenar descendentemente por unidades vendidas (priorizar mayor rotación)
+    // Ordenar descendentemente por unidades vendidas/utilizadas (priorizar mayor rotación)
     resultado.sort((a, b) => b.unidadesVendidas - a.unidadesVendidas)
 
     return { success: true, productos: resultado }
