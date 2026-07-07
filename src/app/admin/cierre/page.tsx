@@ -308,6 +308,7 @@ export default function CierrePage() {
         producto_id: p.id,
         conteo_fisico: p.conteoFisico || 0,
         unidades_utilizadas: p.unidadesVendidas || 0,
+        stock_inicial: p.stockInicial || 0,
       }))
 
       // Guardar conteos físicos y unidades utilizadas en base de datos

@@ -197,7 +197,7 @@ export async function iniciarAuditoria(
  */
 export async function registrarConteosAuditoria(
   jornadaId: string,
-  conteos: { producto_id: string; conteo_fisico: number; unidades_utilizadas: number }[]
+  conteos: { producto_id: string; conteo_fisico: number; unidades_utilizadas: number; stock_inicial: number }[]
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = await createClient()
@@ -238,6 +238,7 @@ export async function registrarConteosAuditoria(
       producto_id: c.producto_id,
       conteo_fisico: c.conteo_fisico,
       unidades_utilizadas: c.unidades_utilizadas,
+      stock_inicial: c.stock_inicial,
     }))
 
     const { error: insertError } = await supabase
@@ -543,6 +544,227 @@ export async function obtenerProductosAuditoria(jornadaId: string): Promise<{
     return { success: true, productos: resultado }
   } catch (err: any) {
     return { success: false, error: err.message || 'Error al obtener productos para auditoría.' }
+  }
+}
+
+/**
+ * Obtiene la lista de todas las jornadas, ordenadas por fecha de inicio descendente.
+ * Exclusivo para administradores.
+ */
+export async function obtenerHistorialJornadas(): Promise<{
+  success: boolean
+  error?: string
+  jornadas?: any[]
+}> {
+  try {
+    const supabase = await createClient()
+    const adminCheck = await verificarAdmin(supabase)
+    if (!adminCheck.ok) return { success: false, error: adminCheck.error }
+
+    const { data, error } = await supabase
+      .from('Jornadas')
+      .select('jornada_id, estado, fecha_inicio, fecha_fin, total_general, ganancia_neta, gastos_totales')
+      .order('fecha_inicio', { ascending: false })
+
+    if (error) return { success: false, error: error.message }
+
+    return { success: true, jornadas: data || [] }
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Error inesperado al obtener el historial de jornadas.' }
+  }
+}
+
+/**
+ * Obtiene el desglose completo financiero, gastos, comandas e inventario
+ * de una jornada histórica específica.
+ * Exclusivo para administradores.
+ */
+export async function obtenerDetalleHistorialJornada(jornadaId: string): Promise<{
+  success: boolean
+  error?: string
+  jornada?: any
+  gastos?: any[]
+  comandas?: any[]
+  auditoria?: any[]
+}> {
+  try {
+    const supabase = await createClient()
+    const adminCheck = await verificarAdmin(supabase)
+    if (!adminCheck.ok) return { success: false, error: adminCheck.error }
+
+    // 1. Obtener datos de la jornada específica
+    const { data: jornada, error: jornadaError } = await supabase
+      .from('Jornadas')
+      .select('*')
+      .eq('jornada_id', jornadaId)
+      .single()
+
+    if (jornadaError || !jornada) {
+      return { success: false, error: 'Jornada no encontrada o error de base de datos.' }
+    }
+
+    // 2. Obtener gastos con categoría
+    const { data: gastos, error: gastosError } = await supabase
+      .from('Gastos')
+      .select(`
+        id,
+        descripcion,
+        monto,
+        Categorias_Gastos (
+          nombre
+        )
+      `)
+      .eq('jornada_id', jornadaId)
+
+    if (gastosError) return { success: false, error: 'Error al recuperar gastos: ' + gastosError.message }
+
+    const gastosFormateados = gastos?.map((g: any) => ({
+      id: g.id,
+      descripcion: g.descripcion,
+      monto: Number(g.monto) || 0,
+      categoria: g.Categorias_Gastos?.nombre || 'General'
+    }))
+
+    // 3. Obtener comandas detalladas con sus ítems correspondientes y datos relacionales de productos para agrupar rendimiento
+    const { data: comandas, error: comandasError } = await supabase
+      .from('Comandas')
+      .select(`
+        comanda_id,
+        numero_ticket,
+        nro_beeper,
+        fecha,
+        total,
+        medio_pago,
+        Comanda_Items (
+          cantidad,
+          precio_unitario_historico,
+          producto_id,
+          Productos (
+            nombre,
+            vendible,
+            Categorias_Productos (
+              nombre
+            )
+          )
+        )
+      `)
+      .eq('jornada_id', jornadaId)
+      .order('numero_ticket', { ascending: false })
+
+    if (comandasError) return { success: false, error: 'Error al recuperar comandas: ' + comandasError.message }
+
+    const comandasFormateadas = comandas?.map((c: any) => {
+      const items = c.Comanda_Items?.map((item: any) => ({
+        nombre: item.Productos?.nombre || 'Producto Desconocido',
+        cantidad: item.cantidad,
+        precio: Number(item.precio_unitario_historico) || 0
+      })) || []
+
+      return {
+        id: c.comanda_id,
+        numeroTicket: c.numero_ticket,
+        beeper: c.nro_beeper,
+        fecha: c.fecha,
+        total: Number(c.total) || 0,
+        medioPago: c.medio_pago,
+        items
+      }
+    })
+
+    // 4. Reconstrucción del reporte de inventario histórico
+    // A. Obtener los productos que controlan stock
+    const { data: dbProductos, error: prodError } = await supabase
+      .from('Productos')
+      .select('id, nombre, controla_stock')
+      .eq('activo', true)
+      .eq('controla_stock', true)
+
+    if (prodError) return { success: false, error: 'Error al recuperar catálogo de productos: ' + prodError.message }
+
+    // B. Obtener la auditoría de la jornada actual
+    const { data: dbAuditoriaActual, error: audError } = await supabase
+      .from('Auditoria_Inventario')
+      .select('producto_id, conteo_fisico, unidades_utilizadas, stock_inicial')
+      .eq('jornada_id', jornadaId)
+
+    if (audError) return { success: false, error: 'Error al recuperar auditoría actual: ' + audError.message }
+
+    const auditoriaMap: Record<string, { conteo_fisico: number; unidades_utilizadas: number; stock_inicial: number }> = {}
+    dbAuditoriaActual?.forEach((item) => {
+      auditoriaMap[item.producto_id] = {
+        conteo_fisico: Number(item.conteo_fisico) || 0,
+        unidades_utilizadas: Number(item.unidades_utilizadas) || 0,
+        stock_inicial: Number(item.stock_inicial) || 0
+      }
+    })
+
+    // C. Unificar catálogo con datos de auditoría
+    const auditoriaReporte = dbProductos.map((p) => {
+      const audit = auditoriaMap[p.id]
+      
+      // Stock Inicial: leído directamente de la foto persistida en la auditoría de la jornada
+      const stockInicial = audit ? audit.stock_inicial : 0
+      const unidadesUtilizadas = audit ? audit.unidades_utilizadas : 0
+      const stockTeorico = Math.max(0, stockInicial - unidadesUtilizadas)
+      const conteoFisico = audit ? audit.conteo_fisico : 0
+      const desvio = conteoFisico - stockTeorico
+
+      return {
+        id: p.id,
+        nombre: p.nombre,
+        stockInicial,
+        unidadesUtilizadas,
+        stockTeorico,
+        conteoFisico,
+        desvio
+      }
+    })
+
+    // Ordenar descendentemente por unidades utilizadas (rotación)
+    auditoriaReporte.sort((a, b) => b.unidadesUtilizadas - a.unidadesUtilizadas)
+
+    // 5. Consolidación de Rendimiento de Ventas (sólo productos vendibles, excluyendo insumos)
+    const rendimientoMap: Record<string, { nombre: string; categoria: string; cantidad: number; total: number }> = {}
+    
+    comandas?.forEach((c: any) => {
+      c.Comanda_Items?.forEach((item: any) => {
+        const prod = item.Productos
+        if (prod && prod.vendible) {
+          const prodId = item.producto_id
+          const cant = Number(item.cantidad) || 0
+          const precio = Number(item.precio_unitario_historico) || 0
+          const subtotal = cant * precio
+          const catNombre = prod.Categorias_Productos?.nombre || 'General'
+
+          if (!rendimientoMap[prodId]) {
+            rendimientoMap[prodId] = {
+              nombre: prod.nombre,
+              categoria: catNombre,
+              cantidad: 0,
+              total: 0
+            }
+          }
+          
+          rendimientoMap[prodId].cantidad += cant
+          rendimientoMap[prodId].total += subtotal
+        }
+      })
+    })
+
+    const rendimientoReporte = Object.values(rendimientoMap)
+    // Ordenar de mayor a menor cantidad vendida (rotación)
+    rendimientoReporte.sort((a, b) => b.cantidad - a.cantidad)
+
+    return {
+      success: true,
+      jornada,
+      gastos: gastosFormateados || [],
+      comandas: comandasFormateadas || [],
+      auditoria: auditoriaReporte,
+      rendimiento: rendimientoReporte
+    }
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Error inesperado al obtener el detalle de jornada.' }
   }
 }
 

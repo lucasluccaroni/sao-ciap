@@ -6,8 +6,8 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 
 ## 📌 Resumen de Situación
 *   **Fase Actual**: Frontend / UI - Desarrollo de pantallas.
-*   **Último Hito Completado**: Pantalla de Login, Layout administrativo `/admin`, Caja del Día (`/admin/caja`), Flujo de Cierre de Caja (`/admin/cierre`), Módulo de Gestión de Productos y Categorías (ABM) en `/admin/productos`, y Terminal de Comandas en `/comandas` 100% integrados con backend y base de datos, con soporte para concurrencia, responsive scroll por zoom y control de cierre de sesión interactivo.
-*   **Estado de la Sesión**: Listo para el maquetado de Historiales de Jornadas e Informes de Stock o el módulo de la Calculadora de Costos.
+*   **Último Hito Completado**: Pantallas de Login, Layout administrativo `/admin`, Caja del Día (`/admin/caja`), Cierre de Caja (`/admin/cierre`), ABM de Productos y Categorías (`/admin/productos`), Terminal de Comandas (`/comandas`) e Historial de Jornadas con Reporte de Stock y Conciliación Financiera (`/admin/historial`) 100% integrados y adaptados estéticamente.
+*   **Estado de la Sesión**: Listo para el diseño e implementación de la Calculadora de Costos volátil de insumos (`/admin/calculadora`).
 
 ---
 
@@ -23,6 +23,10 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 - [x] Crear scripts de migración/inicialización (`schema.sql` y `triggers.sql`)
 - [x] Crear políticas de seguridad Row Level Security (`policies.sql`)
 - [x] Optimizar la función SQL RPC `procesar_comanda` para validar stock en un bucle preliminar antes de insertar la cabecera en `Comandas`, evitando saltos/huecos numéricos en la secuencia autoincremental de tickets.
+- [x] Crear script de reseteo y limpieza de datos operacionales (`clear_business_data.sql`) reiniciando secuencias auto-incrementales de tickets y respetando usuarios/roles.
+- [x] Crear script de inicialización de categorías por defecto de productos y gastos (`seed_default_categories.sql`).
+- [x] Corregir fórmula de `ganancia_neta` en la función RPC SQL `cerrar_jornada` en `triggers.sql` para evitar la doble deducción de la comisión de Mercado Pago.
+- [x] Crear script de limpieza selectiva de historial transaccional (`clear_historical_data.sql`) para pruebas de flujo de cierre de jornada y tickets sin pérdida de catálogo de productos/categorías.
 
 ### 3. Backend / API
 - [x] Configurar servidor Next.js y dependencias (Next.js 16 + Tailwind 4 + Supabase configurado en package.json)
@@ -39,9 +43,11 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 ### 4. Frontend / UI
 - [x] Implementar pantallas segun disenos en `/design`
     - [x] Pantalla de Login (Maquetado e integración de acciones completados; pendiente copia local de assets por parte del usuario)
+    - [x] Integración de Favicon dinámico (Copia y prueba de logo, fantasma original, fantasma con fondo negro y fantasma con fondo naranja en `src/app/icon.png`)
     - [x] Panel de Control de Jornada (Layout de administración, Caja del Día, Carga de Gastos y flujo secuencial de Cierre de Caja completados en código)
         - [x] Habilitación de la edición manual de consumo de insumos en la auditoría física, recalculando el stock teórico reactivamente.
         - [x] Corrección ortográfica en la leyenda informativa del footer de auditoría.
+        - [x] Implementación de componente de navegación superior interactivo `<AdminNav />` para resaltar con texto blanco y borde cian la sección activa actual del panel de administración (Productos, Comandas, Caja, Cierre, Historial, Calculadora).
     - [x] ABM de Productos y Gestión de Categorías (Pantalla en `/admin/productos`, modales de nuevo/editar, confirmación de baja y gestión de categorías completados en código)
         - [x] Clasificación de productos (Toggle: Ventas/Insumos) y Checkbox reactivo de Seguimiento de Stock.
         - [x] Integración de barra de filtros avanzada (por categoría, búsqueda en vivo, tipo de item: Insumos/Productos/Elaboración Instantánea, y checkbox de inactivos).
@@ -121,12 +127,13 @@ La base de datos se estructurará de la siguiente manera:
     *   `producto_id` UUID (FK a `Productos`)
     *   `conteo_fisico` INTEGER
     *   `unidades_utilizadas` INTEGER (Default 0)
+    *   `stock_inicial` INTEGER (Default 0)
 
 ---
 
 ## Instrucciones para la Siguiente IA (Relevo)
 Si eres la IA que retoma el desarrollo en un nuevo chat:
 1.  **Entorno**: Workspace local `D:\repositorios\sao-ciap`. La base de datos Supabase ya está 100% inicializada y configurada.
-2.  **Estado actual**: Las pantallas de Login (`/`), Panel de Control de Jornada (`/admin/caja` y `/admin/cierre`), gestión de Productos/Categorías (`/admin/productos`) y la Terminal de Comandas (`/comandas`) están 100% integradas y robustecidas. La base de datos cuenta con bloqueo pesimista `FOR UPDATE` libre de huecos de ticket ante fallas. Se añadieron filtros por clasificación (Insumos, Productos, Elaboración), responsive scroll ante zoom vertical, alertas de alto contraste y modales de confirmación al cerrar sesión.
-3.  **Siguiente Paso Obligatorio**: Estás en la **Fase 4: Frontend / UI**. Debes maquetar e integrar la pantalla de **Historial de Jornadas e Informes de Stock** (`/admin/historial`) o el módulo de la **Calculadora de Costos** volátil de insumos (`/admin/calculadora`).
+2.  **Estado actual**: Las pantallas principales del sistema, incluyendo Login (`/`), Panel de Control de Jornada (`/admin/caja` y `/admin/cierre`), ABM de Productos (`/admin/productos`), Terminal de Comandas (`/comandas`) e Historial con Reportes de Stock (`/admin/historial`) están 100% implementadas e integradas con la base de datos. Se han aplicado directivas de paleta de colores uniformes (fondo naranja con tarjetas oscuras flotantes) y consistencia tipográfica.
+3.  **Siguiente Paso Obligatorio**: Estás en la **Fase 4: Frontend / UI**. Debes maquetar e integrar el módulo de la **Calculadora de Costos** volátil de insumos (`/admin/calculadora`).
 4.  **Estética**: Recuerda utilizar Tailwind 4 y aplicar los lineamientos de diseño moderno (oscuro premium mate, bordes de vidrio `#9D9D9D/15`, tonos ocre/dorado y naranja quemado para acciones). Revisa `/design` para obtener el contexto visual.

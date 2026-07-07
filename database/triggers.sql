@@ -189,9 +189,9 @@ BEGIN
 
     -- D. Calcular totales derivados
     --    total_general: lo que realmente ingreso en caja (efectivo + monto real cobrado por MP)
-    --    ganancia_neta: ingresos reales menos gastos operativos y comision de la plataforma MP
+    --    ganancia_neta: ingresos reales menos gastos operativos
     v_total_general := v_total_efectivo + p_total_mp_real;
-    v_ganancia_neta := v_total_general - v_gastos_totales - p_comision_mp;
+    v_ganancia_neta := v_total_general - v_gastos_totales;
 
     -- E. Persistir el balance completo y cerrar la jornada en una unica operacion atomica
     UPDATE public."Jornadas"

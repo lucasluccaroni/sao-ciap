@@ -1,9 +1,9 @@
 import React from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import BotonSalirAdmin from '@/components/BotonSalirAdmin'
+import AdminNav from '@/components/AdminNav'
 
 export default async function AdminLayout({
   children,
@@ -69,45 +69,8 @@ export default async function AdminLayout({
           </span>
         </div>
 
-        {/* Menú de Navegación Central */}
-        <nav className="hidden md:flex items-center gap-6 h-full font-livvic text-sm font-medium">
-          <Link
-            href="/admin/productos"
-            className="text-[#9D9D9D] hover:text-[#F2F2F2] transition-colors relative flex items-center h-full hover:after:content-[''] hover:after:absolute hover:after:bottom-0 hover:after:left-0 hover:after:w-full hover:after:h-[2px] hover:after:bg-[#30CFF2]"
-          >
-            Productos
-          </Link>
-          <Link
-            href="/admin/comandas"
-            className="text-[#9D9D9D] hover:text-[#F2F2F2] transition-colors relative flex items-center h-full hover:after:content-[''] hover:after:absolute hover:after:bottom-0 hover:after:left-0 hover:after:w-full hover:after:h-[2px] hover:after:bg-[#30CFF2]"
-          >
-            Comandas
-          </Link>
-          <Link
-            href="/admin/caja"
-            className="text-[#9D9D9D] hover:text-[#F2F2F2] transition-colors relative flex items-center h-full hover:after:content-[''] hover:after:absolute hover:after:bottom-0 hover:after:left-0 hover:after:w-full hover:after:h-[2px] hover:after:bg-[#30CFF2]"
-          >
-            Caja
-          </Link>
-          <Link
-            href="/admin/cierre"
-            className="text-[#9D9D9D] hover:text-[#F2F2F2] transition-colors relative flex items-center h-full hover:after:content-[''] hover:after:absolute hover:after:bottom-0 hover:after:left-0 hover:after:w-full hover:after:h-[2px] hover:after:bg-[#30CFF2]"
-          >
-            Cierre
-          </Link>
-          <Link
-            href="/admin/historial"
-            className="text-[#9D9D9D] hover:text-[#F2F2F2] transition-colors relative flex items-center h-full hover:after:content-[''] hover:after:absolute hover:after:bottom-0 hover:after:left-0 hover:after:w-full hover:after:h-[2px] hover:after:bg-[#30CFF2]"
-          >
-            Historial
-          </Link>
-          <Link
-            href="/admin/calculadora"
-            className="text-[#9D9D9D] hover:text-[#F2F2F2] transition-colors relative flex items-center h-full hover:after:content-[''] hover:after:absolute hover:after:bottom-0 hover:after:left-0 hover:after:w-full hover:after:h-[2px] hover:after:bg-[#30CFF2]"
-          >
-            Calculadora
-          </Link>
-        </nav>
+        {/* Menú de Navegación Central Interactivo */}
+        <AdminNav />
 
         {/* Panel de Usuario y Salir a la derecha */}
         <div className="flex items-center gap-4">
