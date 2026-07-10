@@ -6,8 +6,8 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 
 ## 📌 Resumen de Situación
 *   **Fase Actual**: Frontend / UI - Desarrollo de pantallas.
-*   **Último Hito Completado**: Pantallas de Login, Layout administrativo `/admin`, Caja del Día (`/admin/caja`), Cierre de Caja (`/admin/cierre`), ABM de Productos y Categorías (`/admin/productos`), Terminal de Comandas (`/comandas`) e Historial de Jornadas con Reporte de Stock y Conciliación Financiera (`/admin/historial`) 100% integrados y adaptados estéticamente.
-*   **Estado de la Sesión**: Listo para el diseño e implementación de la Calculadora de Costos volátil de insumos (`/admin/calculadora`).
+*   **Último Hito Completado**: Pantallas de Login, Layout administrativo `/admin`, Caja del Día (`/admin/caja`), Cierre de Caja (`/admin/cierre`), ABM de Productos y Categorías (`/admin/productos`), Terminal de Comandas (`/comandas`), Historial de Jornadas (`/admin/historial`), Calculadora de Costos volátil e imprimible (`/admin/calculadora`) 100% implementados y funcionales, y el **Documento Maestro Definitivo del Sistema actualizado a la versión 1.7** incorporando todos los flujos reales de producción y la regla del beeper (1-20).
+*   **Estado de la Sesión**: Listo para la validación y pruebas de la Calculadora de Costos y su posterior iteración estética o funcional.
 
 ---
 
@@ -58,6 +58,11 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
         - [x] Remoción de número secuencial preliminar en título y del borde superior redundante del historial pequeño.
         - [x] Corrección de contraste crítico y simplificación de leyendas en banners de jornada bloqueada y auditoría.
         - [x] Modal interactivo de confirmación de cierre de sesión («Salir») para mozos y administradores (componente `<BotonSalirAdmin />`).
+    - [x] Calculadora de Costos (`/admin/calculadora`)
+        - [x] Implementación de grilla interactiva para simulación de insumos libres y cálculo reactivo en el cliente.
+        - [x] Autocompletado sugerido dinámico consumiendo el catálogo real de productos del bar.
+        - [x] Estilos específicos de impresión (`@media print` y selectores `print:`) para reproducir fielmente la hoja de reporte A4 blanca, ocultando el nav de administración global, paneles y botones innecesarios en PDF.
+        - [x] Leyenda informativa y pie de página de acuerdo a los wireframes (Aviso en pantalla en cursiva simple, banner de estimaciones removido y pie de página institucional simplificado).
 
 ---
 

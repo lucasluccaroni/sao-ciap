@@ -50,7 +50,7 @@ export default async function AdminLayout({
   return (
     <div className="min-h-screen flex flex-col bg-[#080A0D] font-livvic text-[#F2F2F2]">
       {/* Topnav (56px / h-14) */}
-      <header className="h-14 w-full bg-[#080A0D] border-b border-[#F2F2F2] flex items-center justify-between px-6 shrink-0 z-30">
+      <header className="h-14 w-full bg-[#080A0D] border-b border-[#F2F2F2] flex items-center justify-between px-6 shrink-0 z-30 print:hidden">
         
         {/* Logo a la izquierda */}
         <div className="flex items-center gap-2.5 select-none">
