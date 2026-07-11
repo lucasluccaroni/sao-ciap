@@ -423,6 +423,7 @@ export default function HistorialJornadasPage() {
                               <th className="py-3 px-4">Producto</th>
                               <th className="py-3 px-4 text-center">Stock Inicial</th>
                               <th className="py-3 px-4 text-center">Unidades Utilizadas</th>
+                              <th className="py-3 px-4 text-center">Regalos</th>
                               <th className="py-3 px-4 text-center">Stock Teórico</th>
                               <th className="py-3 px-4 text-center">Conteo Físico Real</th>
                               <th className="py-3 px-4 text-center">Desvío</th>
@@ -443,6 +444,7 @@ export default function HistorialJornadasPage() {
                                   <td className="py-3.5 px-4 font-semibold text-[#F2F2F2]">{item.nombre}</td>
                                   <td className="py-3.5 px-4 text-center font-medium text-[#9D9D9D]">{item.stockInicial}</td>
                                   <td className="py-3.5 px-4 text-center font-medium text-[#F2F2F2]">{item.unidadesUtilizadas}</td>
+                                  <td className="py-3.5 px-4 text-center font-medium text-[#9D9D9D]">{item.unidadesRegaladas || 0}</td>
                                   <td className="py-3.5 px-4 text-center font-medium text-[#9D9D9D]">{item.stockTeorico}</td>
                                   <td className="py-3.5 px-4 text-center font-semibold text-[#F2F2F2]">{item.conteoFisico}</td>
                                   <td className={`py-3.5 px-4 text-center font-bold ${

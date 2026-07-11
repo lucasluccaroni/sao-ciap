@@ -45,6 +45,7 @@ CREATE TABLE public."Productos" (
     "stockActual" INTEGER NOT NULL CHECK ("stockActual" >= 0),
     unidad VARCHAR(10) NOT NULL CHECK (unidad IN ('u', 'lt', 'ml')),
     activo BOOLEAN DEFAULT true NOT NULL,
+    insumo_compartido_id UUID REFERENCES public."Productos"(id) ON DELETE SET NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
 );
 
@@ -77,7 +78,7 @@ CREATE TABLE public."Comandas" (
     nro_beeper INTEGER CHECK (nro_beeper > 0),
     fecha TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
     total NUMERIC(10, 2) NOT NULL CHECK (total >= 0),
-    medio_pago VARCHAR(20) NOT NULL CHECK (medio_pago IN ('Efectivo', 'Mercado Pago')),
+    medio_pago VARCHAR(20) NOT NULL CHECK (medio_pago IN ('Efectivo', 'Mercado Pago', 'Regalo')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
 );
 
@@ -107,6 +108,9 @@ CREATE TABLE public."Auditoria_Inventario" (
     jornada_id UUID NOT NULL REFERENCES public."Jornadas"(jornada_id) ON DELETE RESTRICT,
     producto_id UUID NOT NULL REFERENCES public."Productos"(id) ON DELETE RESTRICT,
     conteo_fisico INTEGER NOT NULL CHECK (conteo_fisico >= 0),
+    unidades_utilizadas INTEGER DEFAULT 0 NOT NULL,
+    unidades_regaladas INTEGER DEFAULT 0 NOT NULL,
+    stock_inicial INTEGER DEFAULT 0 NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
 );
 

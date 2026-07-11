@@ -67,7 +67,7 @@ export default function ComandasPage() {
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<string>('')
   const [carrito, setCarrito] = useState<CarritoItem[]>([])
   const [beeper, setBeeper] = useState<string>('')
-  const [medioPago, setMedioPago] = useState<'Efectivo' | 'Mercado Pago'>('Efectivo')
+  const [medioPago, setMedioPago] = useState<'Efectivo' | 'Mercado Pago' | 'Regalo'>('Efectivo')
   const [errorMsg, setErrorMsg] = useState('')
   const [altoViewportSuficiente, setAltoViewportSuficiente] = useState(true)
   
@@ -191,8 +191,8 @@ export default function ComandasPage() {
         { event: 'UPDATE', schema: 'public', table: 'Productos' },
         (payload) => {
           const modProd = payload.new as { id: string; stockActual: number; activo: boolean; vendible: boolean }
-          setProductos((prev) =>
-            prev.map((p) => {
+          setProductos((prev) => {
+            const listaActualizada = prev.map((p) => {
               if (p.id === modProd.id) {
                 return { 
                   ...p, 
@@ -202,8 +202,19 @@ export default function ComandasPage() {
                 }
               }
               return p
+            })
+
+            // Propagar cambio de stock en tiempo real a los productos vendibles asociados
+            return listaActualizada.map((p) => {
+              if (p.insumo_compartido_id === modProd.id) {
+                return {
+                  ...p,
+                  stockActual: Number(modProd.stockActual) || 0
+                }
+              }
+              return p
             }).filter(p => p.activo && p.vendible)
-          )
+          })
         }
       )
       .subscribe()
@@ -257,9 +268,17 @@ export default function ComandasPage() {
     const existe = carrito.find(item => item.producto.id === prod.id)
     
     if (prod.controla_stock) {
-      const cantidadActual = existe ? existe.cantidad : 0
-      if (cantidadActual >= prod.stockActual) {
-        setStockErrorMsg(`No hay más existencias disponibles para "${prod.nombre}".`)
+      const recursoId = prod.insumo_compartido_id || prod.id
+      const totalOcupado = carrito.reduce((total, item) => {
+        const itemRecursoId = item.producto.insumo_compartido_id || item.producto.id
+        if (itemRecursoId === recursoId) {
+          return total + item.cantidad
+        }
+        return total
+      }, 0)
+
+      if (totalOcupado >= prod.stockActual) {
+        setStockErrorMsg(`No hay más existencias disponibles (stock de insumo agotado).`)
         setModalStockErrorOpen(true)
         return
       }
@@ -283,8 +302,17 @@ export default function ComandasPage() {
     if (!item) return
 
     if (delta > 0 && item.producto.controla_stock) {
-      if (item.cantidad >= item.producto.stockActual) {
-        setStockErrorMsg(`No hay más existencias disponibles para "${item.producto.nombre}".`)
+      const recursoId = item.producto.insumo_compartido_id || item.producto.id
+      const totalOcupado = carrito.reduce((total, c) => {
+        const itemRecursoId = c.producto.insumo_compartido_id || c.producto.id
+        if (itemRecursoId === recursoId) {
+          return total + c.cantidad
+        }
+        return total
+      }, 0)
+
+      if (totalOcupado >= item.producto.stockActual) {
+        setStockErrorMsg(`No hay más existencias disponibles (stock de insumo agotado).`)
         setModalStockErrorOpen(true)
         return
       }
@@ -526,6 +554,89 @@ export default function ComandasPage() {
     ? productos
     : productos.filter(p => p.categoria_id === categoriaSeleccionada)
 
+  // Función de renderizado para tarjetas de productos individuales para evitar duplicidad
+  const renderTarjetaProducto = (prod: Producto) => {
+    const enCarrito = carrito.find(c => c.producto.id === prod.id)
+    const cantCarrito = enCarrito ? enCarrito.cantidad : 0
+
+    // Calcular consumo unificado de existencias del insumo asociado en el carrito actual
+    const recursoId = prod.insumo_compartido_id || prod.id
+    const cantOcupadaEnCarrito = !prod.controla_stock
+      ? 0
+      : carrito.reduce((total, item) => {
+          const itemRecursoId = item.producto.insumo_compartido_id || item.producto.id
+          if (itemRecursoId === recursoId) {
+            return total + item.cantidad
+          }
+          return total
+        }, 0)
+
+    const sinStock = prod.controla_stock && prod.stockActual <= cantOcupadaEnCarrito
+    const stockRestanteEnPantalla = Math.max(0, prod.stockActual - cantOcupadaEnCarrito)
+
+    // Círculo de color en base al stock restante
+    const colorCirculo = !prod.controla_stock
+      ? 'bg-[#1D9E75]'
+      : stockRestanteEnPantalla <= 0
+      ? 'bg-[#E2484A]'
+      : stockRestanteEnPantalla <= 3
+      ? 'bg-[#BA7517]'
+      : 'bg-[#1D9E75]'
+
+    return (
+      <button
+        key={prod.id}
+        disabled={sinStock}
+        onClick={() => agregarAlCarrito(prod)}
+        className={`relative p-4 rounded-xl flex flex-col justify-between text-left transition-all cursor-pointer bg-[#13171B] border border-white/5 h-32 active:scale-[0.99] select-none ${
+          sinStock
+            ? 'opacity-40 cursor-not-allowed shadow-none'
+            : 'hover:bg-[#1A1E24] hover:border-white/20 hover:shadow-lg'
+        }`}
+      >
+        <div>
+          {/* Fila superior: Unidad y Círculo de Stock */}
+          <div className="flex justify-between items-start">
+            <span className="text-[10px] uppercase font-bold text-[#9D9D9D] tracking-wide select-none">
+              {prod.nombre}
+            </span>
+            <div className={`w-2.5 h-2.5 rounded-full ${colorCirculo} shadow-sm`} />
+          </div>
+
+          {/* Precio */}
+          <h4 className="font-mono text-2xl font-bold text-white mt-1">
+            ${prod.precio.toLocaleString('es-AR', { minimumFractionDigits: 0 })}
+          </h4>
+        </div>
+
+        {/* Stock o badge de Sin Stock abajo */}
+        <div className="flex justify-between items-end select-none">
+          {prod.controla_stock ? (
+            <span className="text-xs text-[#9D9D9D]">
+              {stockRestanteEnPantalla} unid.
+            </span>
+          ) : (
+            <span className="text-[9px] bg-yellow-950/20 border border-yellow-800/30 text-yellow-500 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+              Ilimitado
+            </span>
+          )}
+          
+          {sinStock && (
+            <span className="text-[9px] bg-[#E2484A] text-white font-bold px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
+              Sin stock
+            </span>
+          )}
+
+          {cantCarrito > 0 && (
+            <div className="w-6 h-6 rounded-full bg-[#30CFF2] flex items-center justify-center text-[#080A0D] text-xs font-bold shadow-[0_0_8px_rgba(48,207,242,0.4)] animate-scale-in">
+              {cantCarrito}
+            </div>
+          )}
+        </div>
+      </button>
+    )
+  }
+
   return (
     <div className={`w-full bg-[#F26A1B] flex flex-col font-livvic text-[#F2F2F2] ${altoViewportSuficiente ? 'overflow-hidden ' + (esAdminRoute ? 'h-[calc(100vh-56px)]' : 'h-screen') : 'overflow-y-auto min-h-screen'}`}>
       
@@ -596,80 +707,40 @@ export default function ComandasPage() {
             </div>
           </div>
 
-          {productosFiltrados.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center border border-dashed border-white/20 rounded-2xl py-12 text-sm text-white/60 select-none">
-              No hay productos disponibles en esta categoría.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {productosFiltrados.map((prod) => {
-                const enCarrito = carrito.find(c => c.producto.id === prod.id)
-                const cantCarrito = enCarrito ? enCarrito.cantidad : 0
-                const sinStock = prod.controla_stock && prod.stockActual <= cantCarrito
-
-                // Círculo de color en base al stock restante
-                const colorCirculo = !prod.controla_stock
-                  ? 'bg-[#1D9E75]'
-                  : prod.stockActual - cantCarrito <= 0
-                  ? 'bg-[#E2484A]'
-                  : prod.stockActual - cantCarrito <= 3
-                  ? 'bg-[#BA7517]'
-                  : 'bg-[#1D9E75]'
+          {categoriaSeleccionada === 'todas' ? (
+            <div className="space-y-8 flex-1">
+              {categorias.filter(c => c.id !== 'todas').map((cat) => {
+                const prodsDeCat = productos.filter(p => p.categoria_id === cat.id)
+                if (prodsDeCat.length === 0) return null
 
                 return (
-                  <button
-                    key={prod.id}
-                    disabled={sinStock}
-                    onClick={() => agregarAlCarrito(prod)}
-                    className={`relative p-4 rounded-xl flex flex-col justify-between text-left transition-all cursor-pointer bg-[#13171B] border border-white/5 h-32 active:scale-[0.99] select-none ${
-                      sinStock
-                        ? 'opacity-40 cursor-not-allowed shadow-none'
-                        : 'hover:bg-[#1A1E24] hover:border-white/20 hover:shadow-lg'
-                    }`}
-                  >
-                    <div>
-                      {/* Fila superior: Unidad y Círculo de Stock */}
-                      <div className="flex justify-between items-start">
-                        <span className="text-[10px] uppercase font-bold text-[#9D9D9D] tracking-wide select-none">
-                          {prod.nombre}
-                        </span>
-                        <div className={`w-2.5 h-2.5 rounded-full ${colorCirculo} shadow-sm`} />
-                      </div>
-
-                      {/* Precio */}
-                      <h4 className="font-mono text-2xl font-bold text-white mt-1">
-                        ${prod.precio.toLocaleString('es-AR', { minimumFractionDigits: 0 })}
-                      </h4>
+                  <div key={cat.id} className="animate-scale-in">
+                    <div className="flex items-center gap-3 mb-4 select-none">
+                      <span 
+                        className="px-3.5 py-1 rounded text-xs font-bold uppercase tracking-wider shadow-sm"
+                        style={{ backgroundColor: cat.color_fondo, color: cat.color_text || '#FFFFFF' }}
+                      >
+                        {cat.nombre}
+                      </span>
+                      <div className="flex-1 h-0.5 bg-white/20" />
                     </div>
-
-                    {/* Stock o badge de Sin Stock abajo */}
-                    <div className="flex justify-between items-end select-none">
-                      {prod.controla_stock ? (
-                        <span className="text-xs text-[#9D9D9D]">
-                          {prod.stockActual - cantCarrito} unid.
-                        </span>
-                      ) : (
-                        <span className="text-[9px] bg-yellow-950/20 border border-yellow-800/30 text-yellow-500 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                          Ilimitado
-                        </span>
-                      )}
-                      
-                      {sinStock && (
-                        <span className="text-[9px] bg-[#E2484A] text-white font-bold px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
-                          Sin stock
-                        </span>
-                      )}
-
-                      {cantCarrito > 0 && (
-                        <div className="w-6 h-6 rounded-full bg-[#30CFF2] flex items-center justify-center text-[#080A0D] text-xs font-bold shadow-[0_0_8px_rgba(48,207,242,0.4)] animate-scale-in">
-                          {cantCarrito}
-                        </div>
-                      )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {prodsDeCat.map(renderTarjetaProducto)}
                     </div>
-                  </button>
+                  </div>
                 )
               })}
             </div>
+          ) : (
+            productosFiltrados.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center border border-dashed border-white/20 rounded-2xl py-12 text-sm text-white/60 select-none">
+                No hay productos disponibles en esta categoría.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-scale-in">
+                {productosFiltrados.map(renderTarjetaProducto)}
+              </div>
+            )
           )}
         </main>
 
@@ -814,6 +885,25 @@ export default function ComandasPage() {
                   Mercado Pago
                 </button>
               </div>
+
+              {/* Botón de Regalo (Más pequeño y de menor prioridad visual) */}
+              <button
+                type="button"
+                onClick={() => setMedioPago('Regalo')}
+                className={`w-full h-8 text-[10px] font-bold rounded-md transition-all cursor-pointer uppercase tracking-wider text-center border mt-1.5 ${
+                  medioPago === 'Regalo'
+                    ? 'bg-[#7C3AED] border-[#7C3AED] text-white shadow-sm font-extrabold'
+                    : 'bg-transparent border-dashed border-white/10 text-white/40 hover:text-white/70 hover:border-white/20'
+                }`}
+              >
+                Regalo de la Casa
+              </button>
+
+              {medioPago === 'Regalo' && (
+                <p className="text-[10px] text-[#080A0D] font-semibold italic mt-0.5 leading-tight select-none">
+                  Esta comanda se registrará como regalo y tendrá valor de $0 en caja, descontando stock.
+                </p>
+              )}
             </div>
 
             {errorMsg && (

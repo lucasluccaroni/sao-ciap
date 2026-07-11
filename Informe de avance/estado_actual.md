@@ -4,14 +4,14 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 
 ---
 
-## 📌 Resumen de Situación
-*   **Fase Actual**: Frontend / UI - Desarrollo de pantallas.
-*   **Último Hito Completado**: Pantallas de Login, Layout administrativo `/admin`, Caja del Día (`/admin/caja`), Cierre de Caja (`/admin/cierre`), ABM de Productos y Categorías (`/admin/productos`), Terminal de Comandas (`/comandas`), Historial de Jornadas (`/admin/historial`), Calculadora de Costos volátil e imprimible (`/admin/calculadora`) 100% implementados y funcionales, y el **Documento Maestro Definitivo del Sistema actualizado a la versión 1.7** incorporando todos los flujos reales de producción y la regla del beeper (1-20).
-*   **Estado de la Sesión**: Listo para la validación y pruebas de la Calculadora de Costos y su posterior iteración estética o funcional.
+## Resumen de Situación
+*   **Fase Actual**: Frontend / UI - Finalización de módulos transaccionales.
+*   **Último Hito Completado**: Módulo de Comandas de Regalo (registro de obsequios a valor cero en caja con descuento de existencias) y Blindaje de Stock Compartido unificado en caliente (sincronización reactiva del carrito y control de límites para pizzas enlazadas).
+*   **Estado de la Sesión**: Funcionalidades del bar completadas y validadas, listas para despliegue y pruebas finales por parte de la dueña.
 
 ---
 
-## 🛠️ Tareas y Progreso Detallado
+## Tareas y Progreso Detallado
 
 ### 1. Inicialización y Preparación
 - [x] Crear sistema de control de estado en `/Informe de avance`
@@ -27,6 +27,8 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 - [x] Crear script de inicialización de categorías por defecto de productos y gastos (`seed_default_categories.sql`).
 - [x] Corregir fórmula de `ganancia_neta` en la función RPC SQL `cerrar_jornada` en `triggers.sql` para evitar la doble deducción de la comisión de Mercado Pago.
 - [x] Crear script de limpieza selectiva de historial transaccional (`clear_historical_data.sql`) para pruebas de flujo de cierre de jornada y tickets sin pérdida de catálogo de productos/categorías.
+- [x] Alterar check constraint de la columna `medio_pago` en la tabla `Comandas` para admitir el valor `'Regalo'`.
+- [x] Modificar la función SQL RPC `procesar_comanda` para forzar a `0.00` el total de la cabecera de la comanda si se registra como `'Regalo'`, manteniendo la persistencia histórica de ítems y precios para auditoría.
 
 ### 3. Backend / API
 - [x] Configurar servidor Next.js y dependencias (Next.js 16 + Tailwind 4 + Supabase configurado en package.json)
@@ -35,10 +37,11 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
     - [x] `obtenerJornadaActiva` — lectura de jornada activa para inicializacion de terminales
     - [x] `abrirJornada` — insercion con control de duplicado via restriccion unica
     - [x] `iniciarAuditoria` — transicion de estado `abierta` a `en_auditoria`
-    - [x] `registrarConteosAuditoria` — persiste conteos físicos y unidades utilizadas reales
+    - [x] `registrarConteosAuditoria` — persiste conteos físicos, unidades utilizadas y regaladas reales
     - [x] `cerrarJornada` — invoca RPC SQL `cerrar_jornada` para balance atomico y consolidación de stock físico en el catálogo
     - [x] Server Actions de Productos y Categorías (`src/app/actions/productos.ts`) para consultas y modificaciones
-- [x] Agregar funcion SQL RPC `cerrar_jornada` a `database/triggers.sql` (Consolidación atómica de finanzas y stock físico en Productos)
+    - [x] Adaptar Server Action `obtenerProductosAuditoria` para deducir las unidades regaladas en el cálculo del stock teórico e incluirlas en el retorno.
+    - [x] Adaptar Server Action `obtenerDetalleHistorialJornada` para recuperar unidades regaladas históricas de la auditoría.
 
 ### 4. Frontend / UI
 - [x] Implementar pantallas segun disenos en `/design`
@@ -48,16 +51,23 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
         - [x] Habilitación de la edición manual de consumo de insumos en la auditoría física, recalculando el stock teórico reactivamente.
         - [x] Corrección ortográfica en la leyenda informativa del footer de auditoría.
         - [x] Implementación de componente de navegación superior interactivo `<AdminNav />` para resaltar con texto blanco y borde cian la sección activa actual del panel de administración (Productos, Comandas, Caja, Cierre, Historial, Calculadora).
+        - [x] Integrar columna "Regalos" en la tabla de auditoría del Paso 2 del Cierre de Caja y recalcular el stock teórico reactivo restando los regalos cargados por comanda.
     - [x] ABM de Productos y Gestión de Categorías (Pantalla en `/admin/productos`, modales de nuevo/editar, confirmación de baja y gestión de categorías completados en código)
         - [x] Clasificación de productos (Toggle: Ventas/Insumos) y Checkbox reactivo de Seguimiento de Stock.
         - [x] Integración de barra de filtros avanzada (por categoría, búsqueda en vivo, tipo de item: Insumos/Productos/Elaboración Instantánea, y checkbox de inactivos).
         - [x] Rediseño estético con fondo naranja corporativo (`bg-[#F26A1B]`) y módulo administrativo central en tarjeta oscura flotante.
+        - [x] Soporte relacional y de UI para la asociación de Stock Compartido (Insumo Origen) entre productos de venta e insumos de catálogo.
     - [x] Interfaz Principal de Ventas (Toma de Comandas en `/comandas` integrada con beeper, medio de pago y bloqueo Realtime de estado de jornada)
         - [x] Sincronización local optimista de stock del catálogo al vender la última unidad antes del refresco de red.
         - [x] Implementación de scroll adaptativo responsive y detector de altura física de viewport (`window.innerHeight`) ante zoom del navegador.
         - [x] Remoción de número secuencial preliminar en título y del borde superior redundante del historial pequeño.
         - [x] Corrección de contraste crítico y simplificación de leyendas en banners de jornada bloqueada y auditoría.
         - [x] Modal interactivo de confirmación de cierre de sesión («Salir») para mozos y administradores (componente `<BotonSalirAdmin />`).
+        - [x] Subdivisión estética y dinámica por categorías en la grilla al filtrar por "Todos los productos", implementando cabeceras personalizadas con colores de marca y líneas divisorias de relieve.
+        - [x] Refactorizar la deducción de stock local contra la acumulación de consumos por insumo compartido en el carrito en tiempo real, bloqueando sobreventas.
+        - [x] Incorporar botón compacto y ultra-discreto "Regalo de la Casa" (medio de pago `'Regalo'`) con nota aclaratoria para registrar las comandas de obsequio.
+    - [x] Historial de Jornadas (`/admin/historial`)
+        - [x] Incluir la columna "Regalos" en la visualización del stock histórico de la jornada auditada para transparentar desvíos.
     - [x] Calculadora de Costos (`/admin/calculadora`)
         - [x] Implementación de grilla interactiva para simulación de insumos libres y cálculo reactivo en el cliente.
         - [x] Autocompletado sugerido dinámico consumiendo el catálogo real de productos del bar.
@@ -66,7 +76,7 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 
 ---
 
-## 📐 Especificación del Esquema Acordado
+## Especificación del Esquema Acordado
 La base de datos se estructurará de la siguiente manera:
 
 1.  **`Categorias_Productos`**:
@@ -98,6 +108,7 @@ La base de datos se estructurará de la siguiente manera:
     *   `activo` BOOLEAN (Default true)
     *   `vendible` BOOLEAN (Default true)
     *   `controla_stock` BOOLEAN (Default true)
+    *   `insumo_compartido_id` UUID NULL (FK a `Productos` autorreferencial ON DELETE SET NULL)
 5.  **`Jornadas`**:
     *   `jornada_id` UUID PK
     *   `estado` VARCHAR(20) (Constraint: 'abierta', 'en_auditoria', 'cerrada')
@@ -113,7 +124,7 @@ La base de datos se estructurará de la siguiente manera:
     *   `nro_beeper` INTEGER OPTIONAL
     *   `fecha` TIMESTAMP WITH TIME ZONE
     *   `total` NUMERIC(10,2)
-    *   `medio_pago` VARCHAR(20) (Constraint: 'Efectivo', 'Mercado Pago')
+    *   `medio_pago` VARCHAR(20) (Constraint: 'Efectivo', 'Mercado Pago', 'Regalo')
 7.  **`Comanda_Items`**:
     *   `id` UUID PK
     *   `comanda_id` UUID (FK a `Comandas` ON DELETE CASCADE)
@@ -132,13 +143,33 @@ La base de datos se estructurará de la siguiente manera:
     *   `producto_id` UUID (FK a `Productos`)
     *   `conteo_fisico` INTEGER
     *   `unidades_utilizadas` INTEGER (Default 0)
+    *   `unidades_regaladas` INTEGER (Default 0)
     *   `stock_inicial` INTEGER (Default 0)
+
+---
+
+## Siguientes Hitos de Desarrollo (Planificados)
+
+### Fase 5: Pruebas de Carga, Concurrencia y Estabilidad
+- [ ] Validar el comportamiento de las 4 terminales activas de manera concurrente, asegurando que el bloqueo pesimista en `procesar_comanda` resuelva transacciones concurrentes sin causar deadlocks o desvíos numéricos de tickets.
+- [ ] Realizar pruebas de estrés a la persistencia y al canal WebSocket de Supabase Realtime bajo alto volumen de eventos.
+- [ ] Verificar la ausencia de fugas de memoria en sesiones de terminal de comandas prolongadas (> 8 horas).
+
+### Fase 6: Políticas RLS y Despliegue en Producción
+- [ ] Refinar las políticas Row Level Security (RLS) en Supabase para producción, restringiendo inserciones o lecturas basadas estrictamente en los claims de JWT del usuario autenticado.
+- [ ] Configurar el entorno de hosting para producción en Vercel o Netlify para el servidor Next.js.
+- [ ] Configurar respaldos automáticos diarios (backups) del esquema y datos operacionales en Supabase.
+
+### Fase 7: Analíticas Avanzadas y Exportación de Datos
+- [ ] Diseñar el panel mensual de rendimiento comercial del administrador (gráficos históricos de ingresos, egresos, mermas de stock y desvíos acumulados).
+- [ ] Implementar exportador de auditorías de inventario e historial de jornadas a formato CSV/PDF para contabilidad externa.
 
 ---
 
 ## Instrucciones para la Siguiente IA (Relevo)
 Si eres la IA que retoma el desarrollo en un nuevo chat:
 1.  **Entorno**: Workspace local `D:\repositorios\sao-ciap`. La base de datos Supabase ya está 100% inicializada y configurada.
-2.  **Estado actual**: Las pantallas principales del sistema, incluyendo Login (`/`), Panel de Control de Jornada (`/admin/caja` y `/admin/cierre`), ABM de Productos (`/admin/productos`), Terminal de Comandas (`/comandas`) e Historial con Reportes de Stock (`/admin/historial`) están 100% implementadas e integradas con la base de datos. Se han aplicado directivas de paleta de colores uniformes (fondo naranja con tarjetas oscuras flotantes) y consistencia tipográfica.
-3.  **Siguiente Paso Obligatorio**: Estás en la **Fase 4: Frontend / UI**. Debes maquetar e integrar el módulo de la **Calculadora de Costos** volátil de insumos (`/admin/calculadora`).
+2.  **Estado actual**: Todos los flujos transaccionales y de inventario del bar (Login, ABM de productos con stock compartido, Caja del Día, Cierre con Auditoría Física inteligente, Historial completo con reportes de desvíos, y la Calculadora de Costos imprimible) se encuentran 100% completados, integrados y validados.
+3.  **Siguiente Paso Obligatorio**: Iniciar con el usuario las pruebas de concurrencia y estrés de terminales activas descritas en la **Fase 5**.
 4.  **Estética**: Recuerda utilizar Tailwind 4 y aplicar los lineamientos de diseño moderno (oscuro premium mate, bordes de vidrio `#9D9D9D/15`, tonos ocre/dorado y naranja quemado para acciones). Revisa `/design` para obtener el contexto visual.
+

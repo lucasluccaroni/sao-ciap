@@ -224,6 +224,7 @@ export async function obtenerProductos(): Promise<{
     activo: boolean
     vendible: boolean
     controla_stock: boolean
+    insumo_compartido_id?: string | null
     created_at: string
     Categorias_Productos?: {
       nombre: string
@@ -253,13 +254,25 @@ export async function obtenerProductos(): Promise<{
       stockActual: Number(p.stockActual)
     }))
 
-    return { success: true, productos: productosFormateados }
+    // Resolver stock de insumo compartido
+    const productosConStockResuelto = productosFormateados.map(p => {
+      if (p.insumo_compartido_id) {
+        const insumoAsociado = productosFormateados.find(i => i.id === p.insumo_compartido_id)
+        if (insumoAsociado) {
+          return {
+            ...p,
+            stockActual: insumoAsociado.stockActual
+          }
+        }
+      }
+      return p
+    })
+
+    return { success: true, productos: productosConStockResuelto }
   } catch (err: any) {
     return { success: false, error: err.message || 'Error al obtener productos.' }
   }
-}
-
-export async function crearProducto(datos: {
+}export async function crearProducto(datos: {
   nombre: string
   categoria_id: string
   precio: number
@@ -269,6 +282,7 @@ export async function crearProducto(datos: {
   activo?: boolean
   vendible: boolean
   controla_stock: boolean
+  insumo_compartido_id?: string | null
 }): Promise<{ success: boolean; error?: string; producto?: any }> {
   try {
     const supabase = await createClient()
@@ -313,7 +327,8 @@ export async function crearProducto(datos: {
         unidad: datos.unidad,
         activo: datos.activo ?? true,
         vendible: datos.vendible,
-        controla_stock: datos.controla_stock
+        controla_stock: datos.controla_stock,
+        insumo_compartido_id: datos.insumo_compartido_id || null
       })
       .select()
       .single()
@@ -338,6 +353,7 @@ export async function actualizarProducto(
     activo: boolean
     vendible: boolean
     controla_stock: boolean
+    insumo_compartido_id?: string | null
   }
 ): Promise<{ success: boolean; error?: string; producto?: any }> {
   try {
@@ -385,7 +401,8 @@ export async function actualizarProducto(
         unidad: datos.unidad,
         activo: datos.activo,
         vendible: datos.vendible,
-        controla_stock: datos.controla_stock
+        controla_stock: datos.controla_stock,
+        insumo_compartido_id: datos.insumo_compartido_id || null
       })
       .eq('id', id)
       .select()

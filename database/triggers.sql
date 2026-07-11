@@ -44,6 +44,7 @@ DECLARE
     v_nombre_producto VARCHAR(255);
     v_total_comanda NUMERIC(10,2) := 0.00;
     v_jornada_estado VARCHAR(20);
+    v_insumo_id UUID;
 BEGIN
     -- A. Validar que la jornada exista y esté 'abierta'
     SELECT estado INTO v_jornada_estado 
@@ -61,12 +62,26 @@ BEGIN
     -- B. PRIMERA PASADA: Aplicar BLOQUEO PESIMISTA y VALIDAR STOCK de todos los productos antes de insertar la cabecera
     FOR v_item IN SELECT * FROM jsonb_to_recordset(p_items) AS x(producto_id UUID, cantidad INT)
     LOOP
-        -- Aplicar bloqueo FOR UPDATE
-        SELECT nombre, "stockActual", controla_stock 
-        INTO v_nombre_producto, v_stock_actual, v_controla_stock
+        -- Obtener posible insumo compartido
+        SELECT insumo_compartido_id INTO v_insumo_id
         FROM public."Productos"
-        WHERE id = v_item.producto_id
-        FOR UPDATE;
+        WHERE id = v_item.producto_id;
+
+        IF v_insumo_id IS NOT NULL THEN
+            -- Si tiene insumo compartido, el bloqueo y el stock se controlan sobre el insumo
+            SELECT nombre, "stockActual", controla_stock 
+            INTO v_nombre_producto, v_stock_actual, v_controla_stock
+            FROM public."Productos"
+            WHERE id = v_insumo_id
+            FOR UPDATE;
+        ELSE
+            -- Bloqueo normal sobre el producto
+            SELECT nombre, "stockActual", controla_stock 
+            INTO v_nombre_producto, v_stock_actual, v_controla_stock
+            FROM public."Productos"
+            WHERE id = v_item.producto_id
+            FOR UPDATE;
+        END IF;
 
         IF NOT FOUND THEN
             RAISE EXCEPTION 'El producto con ID % no existe.', v_item.producto_id;
@@ -100,16 +115,23 @@ BEGIN
         v_producto_id := v_item.producto_id;
         v_cantidad := v_item.cantidad;
 
-        -- Obtener precio actual y controla_stock (los bloqueos ya fueron adquiridos en la primera pasada)
-        SELECT precio, controla_stock INTO v_precio_unitario, v_controla_stock
+        -- Obtener precio actual, controla_stock e insumo_compartido_id (los bloqueos ya fueron adquiridos en la primera pasada)
+        SELECT precio, controla_stock, insumo_compartido_id 
+        INTO v_precio_unitario, v_controla_stock, v_insumo_id
         FROM public."Productos"
         WHERE id = v_producto_id;
 
         -- Descontar stock (solo si controla_stock es TRUE)
         IF v_controla_stock THEN
-            UPDATE public."Productos"
-            SET "stockActual" = "stockActual" - v_cantidad
-            WHERE id = v_producto_id;
+            IF v_insumo_id IS NOT NULL THEN
+                UPDATE public."Productos"
+                SET "stockActual" = "stockActual" - v_cantidad
+                WHERE id = v_insumo_id;
+            ELSE
+                UPDATE public."Productos"
+                SET "stockActual" = "stockActual" - v_cantidad
+                WHERE id = v_producto_id;
+            END IF;
         END IF;
 
         -- Registrar el ítem histórico en la comanda
@@ -129,10 +151,16 @@ BEGIN
         v_total_comanda := v_total_comanda + (v_precio_unitario * v_cantidad);
     END LOOP;
 
-    -- E. Actualizar la cabecera de la comanda con el total real calculado
-    UPDATE public."Comandas"
-    SET total = v_total_comanda
-    WHERE comanda_id = v_comanda_id;
+    -- E. Actualizar la cabecera de la comanda con el total real (o 0.00 si es Regalo de la casa)
+    IF p_medio_pago = 'Regalo' THEN
+        UPDATE public."Comandas"
+        SET total = 0.00
+        WHERE comanda_id = v_comanda_id;
+    ELSE
+        UPDATE public."Comandas"
+        SET total = v_total_comanda
+        WHERE comanda_id = v_comanda_id;
+    END IF;
 
     -- F. Retornar el ID de la comanda procesada con éxito
     RETURN v_comanda_id;

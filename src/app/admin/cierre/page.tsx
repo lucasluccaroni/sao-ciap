@@ -36,6 +36,7 @@ interface ProductoAuditoriaLocal {
   nombre: string
   stockInicial: number
   unidadesVendidas: number
+  unidadesRegaladas: number
   stockTeorico: number
   conteoFisico?: number
   vendible: boolean
@@ -282,7 +283,7 @@ export default function CierrePage() {
     setProductosAuditoria(
       productosAuditoria.map((p) => {
         if (p.id === prodId) {
-          const stockTeorico = Math.max(0, p.stockInicial - numVal)
+          const stockTeorico = Math.max(0, p.stockInicial - numVal - p.unidadesRegaladas)
           return { ...p, unidadesVendidas: numVal, stockTeorico }
         }
         return p
@@ -308,10 +309,11 @@ export default function CierrePage() {
         producto_id: p.id,
         conteo_fisico: p.conteoFisico || 0,
         unidades_utilizadas: p.unidadesVendidas || 0,
+        unidades_regaladas: p.unidadesRegaladas || 0,
         stock_inicial: p.stockInicial || 0,
       }))
 
-      // Guardar conteos físicos y unidades utilizadas en base de datos
+      // Guardar conteos físicos, unidades utilizadas y regaladas en base de datos
       const resAud = await registrarConteosAuditoria(jornada.jornada_id, conteos)
 
       if (!resAud.success) {
@@ -777,7 +779,8 @@ export default function CierrePage() {
                 <thead>
                   <tr className="border-b border-[#080A0D]/50 text-xs text-[#9D9D9D] font-bold uppercase tracking-wider select-none">
                     <th className="pb-3.5 pl-3">Nombre Producto</th>
-                    <th className="pb-3.5 text-center">Unid. Vendidas / Utilizadas</th>
+                    <th className="pb-3.5 text-center">Vendidos / Utilizados</th>
+                    <th className="pb-3.5 text-center">Regalos</th>
                     <th className="pb-3.5 text-center">Stock Teórico</th>
                     <th className="pb-3.5 text-center w-36">Conteo Físico</th>
                     <th className="pb-3.5 text-right pr-3">Desvío</th>
@@ -820,6 +823,7 @@ export default function CierrePage() {
                             <span className="text-[#9D9D9D]">{p.unidadesVendidas} u.</span>
                           )}
                         </td>
+                        <td className="py-3 text-center text-[#9D9D9D]">{p.unidadesRegaladas} u.</td>
                         <td className="py-3 text-center text-[#9D9D9D]">{p.stockTeorico} u.</td>
                         <td className="py-3 text-center">
                           <input

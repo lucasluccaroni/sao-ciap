@@ -32,6 +32,7 @@ interface Producto {
   activo: boolean
   vendible: boolean
   controla_stock: boolean
+  insumo_compartido_id?: string | null
   Categorias_Productos?: {
     nombre: string
     color_fondo: string
@@ -66,7 +67,8 @@ export default function ProductosPage() {
     unidad: 'u' as 'u' | 'lt' | 'ml',
     activo: true,
     vendible: true,
-    controla_stock: true
+    controla_stock: true,
+    insumo_compartido_id: ''
   })
 
   // Modal Confirmar Baja Producto
@@ -139,7 +141,8 @@ export default function ProductosPage() {
       unidad: 'u',
       activo: true,
       vendible: true,
-      controla_stock: true
+      controla_stock: true,
+      insumo_compartido_id: ''
     })
     setModalProdOpen(true)
   }
@@ -156,7 +159,8 @@ export default function ProductosPage() {
       unidad: prod.unidad,
       activo: prod.activo,
       vendible: prod.vendible,
-      controla_stock: prod.controla_stock
+      controla_stock: prod.controla_stock,
+      insumo_compartido_id: prod.insumo_compartido_id || ''
     })
     setModalProdOpen(true)
   }
@@ -207,7 +211,8 @@ export default function ProductosPage() {
           unidad: prodForm.unidad,
           activo: prodForm.activo,
           vendible: prodForm.vendible,
-          controla_stock: prodForm.controla_stock
+          controla_stock: prodForm.controla_stock,
+          insumo_compartido_id: prodForm.insumo_compartido_id || null
         })
 
         if (res.success) {
@@ -234,7 +239,8 @@ export default function ProductosPage() {
           unidad: prodForm.unidad,
           activo: prodForm.activo,
           vendible: prodForm.vendible,
-          controla_stock: prodForm.controla_stock
+          controla_stock: prodForm.controla_stock,
+          insumo_compartido_id: prodForm.insumo_compartido_id || null
         })
 
         if (res.success) {
@@ -575,7 +581,7 @@ export default function ProductosPage() {
                     <td className="py-3 px-4">
                       <div className="flex flex-col gap-0.5">
                         <span className="font-medium text-[#F2F2F2]">{prod.nombre}</span>
-                        <div className="flex gap-1.5 flex-wrap">
+                        <div className="flex gap-1.5 flex-wrap items-center mt-0.5">
                           {!prod.vendible && (
                             <span className="text-[9px] px-1.5 py-0.5 rounded bg-neutral-800 border border-neutral-700 text-[#9D9D9D] font-bold tracking-wider uppercase select-none">
                               Insumo
@@ -584,6 +590,11 @@ export default function ProductosPage() {
                           {!prod.controla_stock && (
                             <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-950/30 border border-yellow-800/30 text-yellow-500 font-bold tracking-wider uppercase select-none">
                               Sin Seguimiento
+                            </span>
+                          )}
+                          {prod.insumo_compartido_id && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#30CFF2]/10 border border-[#30CFF2]/20 text-[#30CFF2] font-semibold tracking-wide select-none">
+                              Usa stock de: {productos.find(i => i.id === prod.insumo_compartido_id)?.nombre || 'Insumo'}
                             </span>
                           )}
                         </div>
@@ -603,14 +614,23 @@ export default function ProductosPage() {
                     {/* Stock Actual */}
                     <td className="py-3 px-4 text-right font-semibold">
                       {prod.controla_stock ? (
-                        <>
-                          <span className={esBajoStock && prod.activo ? 'text-[#FF4A4A]' : 'text-[#30CFF2]'}>
-                            {prod.stockActual}
-                          </span>
-                          {esBajoStock && prod.activo && (
-                            <span className="block text-[10px] font-medium text-[#FF4A4A] tracking-tight">¡Stock Bajo!</span>
-                          )}
-                        </>
+                        prod.insumo_compartido_id ? (
+                          <>
+                            <span className="text-[#30CFF2]">{prod.stockActual}</span>
+                            <span className="block text-[9px] font-medium text-[#9D9D9D] leading-tight select-none">
+                              Compartido
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className={esBajoStock && prod.activo ? 'text-[#FF4A4A]' : 'text-[#30CFF2]'}>
+                              {prod.stockActual}
+                            </span>
+                            {esBajoStock && prod.activo && (
+                              <span className="block text-[10px] font-medium text-[#FF4A4A] tracking-tight">¡Stock Bajo!</span>
+                            )}
+                          </>
+                        )
                       ) : (
                         <span className="text-neutral-600 font-normal">—</span>
                       )}
@@ -618,12 +638,28 @@ export default function ProductosPage() {
 
                     {/* Stock Ideal */}
                     <td className="py-3 px-4 text-right font-semibold text-[#F2F2F2]">
-                      {prod.controla_stock ? prod.stockIdeal : <span className="text-neutral-600 font-normal">—</span>}
+                      {prod.controla_stock ? (
+                        prod.insumo_compartido_id ? (
+                          <span className="text-neutral-500 font-normal text-xs select-none">Enlazado</span>
+                        ) : (
+                          prod.stockIdeal
+                        )
+                      ) : (
+                        <span className="text-neutral-600 font-normal">—</span>
+                      )}
                     </td>
 
                     {/* Stock Inicial */}
                     <td className="py-3 px-4 text-right font-semibold text-[#F2F2F2]">
-                      {prod.controla_stock ? prod.stockInicial : <span className="text-neutral-600 font-normal">—</span>}
+                      {prod.controla_stock ? (
+                        prod.insumo_compartido_id ? (
+                          <span className="text-neutral-500 font-normal text-xs select-none">Enlazado</span>
+                        ) : (
+                          prod.stockInicial
+                        )
+                      ) : (
+                        <span className="text-neutral-600 font-normal">—</span>
+                      )}
                     </td>
 
                     {/* Estado Activo / Inactivo */}
@@ -783,6 +819,33 @@ export default function ProductosPage() {
                   </div>
                 </div>
 
+                {/* Selector de Insumo Compartido (Solo si es vendible y controla stock) */}
+                {prodForm.vendible && prodForm.controla_stock && (
+                  <div className="pt-2 animate-scale-in">
+                    <label className="block text-xs font-semibold text-[#9D9D9D] uppercase tracking-wider mb-1">
+                      Usa Insumo de Stock Compartido (Opcional)
+                    </label>
+                    <select
+                      value={prodForm.insumo_compartido_id}
+                      onChange={(e) => setProdForm({ ...prodForm, insumo_compartido_id: e.target.value })}
+                      className="w-full h-10 bg-[#080A0D] border border-[#9D9D9D]/15 rounded px-3 text-sm text-[#F2F2F2] focus:outline-none focus:border-[#30CFF2]/60 transition-all cursor-pointer"
+                    >
+                      <option value="">Ninguno (Control de stock directo)</option>
+                      {productos
+                        .filter(p => !p.vendible && p.controla_stock && p.activo && p.id !== prodEditando?.id)
+                        .map(insumo => (
+                          <option key={insumo.id} value={insumo.id}>
+                            {insumo.nombre}
+                          </option>
+                        ))
+                      }
+                    </select>
+                    <p className="text-[10px] text-[#9D9D9D]/70 mt-1">
+                      Selecciona un insumo base (ej. Bollos de Pizza) si este producto debe descontar existencias y compartir stock con él.
+                    </p>
+                  </div>
+                )}
+
                 {/* Fila: Precio y Unidad */}
                 <div className="grid grid-cols-2 gap-4">
                   {/* Precio */}
@@ -820,48 +883,54 @@ export default function ProductosPage() {
 
                 {/* Fila: Stock (Inicial o Actual) y Stock Ideal (Solo si controla_stock es true) */}
                 {prodForm.controla_stock ? (
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Stock */}
-                    <div>
-                      <label className="block text-xs font-semibold text-[#9D9D9D] uppercase tracking-wider mb-1">
-                        {prodEditando ? 'Stock Actual' : 'Stock Inicial'}
-                      </label>
-                      {prodEditando ? (
-                        <input
-                          type="number"
-                          required
-                          value={prodForm.stockActual}
-                          onChange={(e) => setProdForm({ ...prodForm, stockActual: e.target.value })}
-                          className="w-full h-10 bg-[#080A0D] border border-[#9D9D9D]/15 rounded px-4 text-sm text-[#F2F2F2] focus:outline-none focus:border-[#30CFF2]/60 transition-all"
-                          placeholder="0"
-                        />
-                      ) : (
-                        <input
-                          type="number"
-                          required
-                          value={prodForm.stockInicial}
-                          onChange={(e) => setProdForm({ ...prodForm, stockInicial: e.target.value })}
-                          className="w-full h-10 bg-[#080A0D] border border-[#9D9D9D]/15 rounded px-4 text-sm text-[#F2F2F2] focus:outline-none focus:border-[#30CFF2]/60 transition-all"
-                          placeholder="0"
-                        />
-                      )}
+                  prodForm.insumo_compartido_id ? (
+                    <div className="p-3.5 bg-[#30CFF2]/5 border border-[#30CFF2]/10 rounded text-xs text-[#9D9D9D] leading-relaxed select-none animate-scale-in">
+                      Este producto comparte el inventario y stock del insumo asociado <span className="text-[#30CFF2] font-semibold">"{productos.find(p => p.id === prodForm.insumo_compartido_id)?.nombre || 'Insumo seleccionado'}"</span>. No requiere configuración ni conteos de stock propios.
                     </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Stock */}
+                      <div>
+                        <label className="block text-xs font-semibold text-[#9D9D9D] uppercase tracking-wider mb-1">
+                          {prodEditando ? 'Stock Actual' : 'Stock Inicial'}
+                        </label>
+                        {prodEditando ? (
+                          <input
+                            type="number"
+                            required
+                            value={prodForm.stockActual}
+                            onChange={(e) => setProdForm({ ...prodForm, stockActual: e.target.value })}
+                            className="w-full h-10 bg-[#080A0D] border border-[#9D9D9D]/15 rounded px-4 text-sm text-[#F2F2F2] focus:outline-none focus:border-[#30CFF2]/60 transition-all"
+                            placeholder="0"
+                          />
+                        ) : (
+                          <input
+                            type="number"
+                            required
+                            value={prodForm.stockInicial}
+                            onChange={(e) => setProdForm({ ...prodForm, stockInicial: e.target.value })}
+                            className="w-full h-10 bg-[#080A0D] border border-[#9D9D9D]/15 rounded px-4 text-sm text-[#F2F2F2] focus:outline-none focus:border-[#30CFF2]/60 transition-all"
+                            placeholder="0"
+                          />
+                        )}
+                      </div>
 
-                    {/* Stock Ideal */}
-                    <div>
-                      <label className="block text-xs font-semibold text-[#9D9D9D] uppercase tracking-wider mb-1">
-                        Stock Ideal
-                      </label>
-                      <input
-                        type="number"
-                        required
-                        value={prodForm.stockIdeal}
-                        onChange={(e) => setProdForm({ ...prodForm, stockIdeal: e.target.value })}
-                        className="w-full h-10 bg-[#080A0D] border border-[#9D9D9D]/15 rounded px-4 text-sm text-[#F2F2F2] focus:outline-none focus:border-[#30CFF2]/60 transition-all"
-                        placeholder="0"
-                      />
+                      {/* Stock Ideal */}
+                      <div>
+                        <label className="block text-xs font-semibold text-[#9D9D9D] uppercase tracking-wider mb-1">
+                          Stock Ideal
+                        </label>
+                        <input
+                          type="number"
+                          required
+                          value={prodForm.stockIdeal}
+                          onChange={(e) => setProdForm({ ...prodForm, stockIdeal: e.target.value })}
+                          className="w-full h-10 bg-[#080A0D] border border-[#9D9D9D]/15 rounded px-4 text-sm text-[#F2F2F2] focus:outline-none focus:border-[#30CFF2]/60 transition-all"
+                          placeholder="0"
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )
                 ) : (
                   <div className="p-3.5 bg-[#080A0D] border border-[#9D9D9D]/10 rounded text-xs text-[#9D9D9D] leading-relaxed">
                     Este producto de elaboración instantánea no realiza seguimiento de existencias en las ventas ni requiere auditoría física de stock durante el cierre.

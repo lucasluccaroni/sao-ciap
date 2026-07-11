@@ -197,7 +197,7 @@ export async function iniciarAuditoria(
  */
 export async function registrarConteosAuditoria(
   jornadaId: string,
-  conteos: { producto_id: string; conteo_fisico: number; unidades_utilizadas: number; stock_inicial: number }[]
+  conteos: { producto_id: string; conteo_fisico: number; unidades_utilizadas: number; unidades_regaladas: number; stock_inicial: number }[]
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = await createClient()
@@ -238,6 +238,7 @@ export async function registrarConteosAuditoria(
       producto_id: c.producto_id,
       conteo_fisico: c.conteo_fisico,
       unidades_utilizadas: c.unidades_utilizadas,
+      unidades_regaladas: c.unidades_regaladas,
       stock_inicial: c.stock_inicial,
     }))
 
@@ -452,7 +453,7 @@ export async function registrarGastos(
 }
 
 /**
- * Obtiene los productos con su stock teórico y las unidades vendidas en la jornada.
+ * Obtiene los productos con su stock teórico, unidades vendidas y unidades regaladas en la jornada.
  */
 export async function obtenerProductosAuditoria(jornadaId: string): Promise<{
   success: boolean
@@ -462,6 +463,7 @@ export async function obtenerProductosAuditoria(jornadaId: string): Promise<{
     nombre: string
     stockInicial: number
     unidadesVendidas: number
+    unidadesRegaladas: number
     stockTeorico: number
     conteoFisico?: number
     vendible: boolean
@@ -472,42 +474,67 @@ export async function obtenerProductosAuditoria(jornadaId: string): Promise<{
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) return { success: false, error: 'Usuario no autenticado.' }
 
-    // 1. Obtener todos los productos activos con controla_stock = true
+    // 1. Obtener todos los productos activos con controla_stock = true que no tengan insumo compartido
     const { data: dbProductos, error: prodError } = await supabase
       .from('Productos')
       .select('id, nombre, stockInicial, vendible')
       .eq('activo', true)
       .eq('controla_stock', true)
+      .is('insumo_compartido_id', null)
 
     if (prodError) return { success: false, error: prodError.message }
 
-    // 2. Obtener sumatoria de unidades vendidas por producto en esta jornada desde comandas
+    // 2. Obtener sumatoria de unidades vendidas y regaladas por producto en esta jornada desde comandas
     const { data: dbVendidos, error: vendError } = await supabase
       .from('Comanda_Items')
-      .select('producto_id, cantidad, Comandas!inner(jornada_id)')
+      .select('producto_id, cantidad, Productos(insumo_compartido_id), Comandas!inner(jornada_id, medio_pago)')
       .eq('Comandas.jornada_id', jornadaId)
 
     if (vendError) return { success: false, error: vendError.message }
 
-    // Calcular ventas agrupadas en memoria
+    // Calcular ventas y regalos agrupados en memoria (redireccionando al insumo si es de stock compartido)
     const ventasAgrupadas: Record<string, number> = {}
-    dbVendidos?.forEach((item) => {
-      const prodId = item.producto_id
+    const regalosAgrupados: Record<string, number> = {}
+    dbVendidos?.forEach((item: any) => {
+      const insumoCompartidoId = item.Productos?.insumo_compartido_id
+      const recursoId = insumoCompartidoId || item.producto_id
       const cant = Number(item.cantidad) || 0
-      ventasAgrupadas[prodId] = (ventasAgrupadas[prodId] || 0) + cant
+      const medio = item.Comandas?.medio_pago
+      if (medio === 'Regalo') {
+        regalosAgrupados[recursoId] = (regalosAgrupados[recursoId] || 0) + cant
+      } else {
+        ventasAgrupadas[recursoId] = (ventasAgrupadas[recursoId] || 0) + cant
+      }
     })
 
-    // 3. Obtener conteos físicos y unidades utilizadas ya registradas en esta jornada (si existen)
+    // Obtener los insumos compartidos que tienen productos enlazados dependientes
+    const { data: dbInsumosHijos } = await supabase
+      .from('Productos')
+      .select('insumo_compartido_id')
+      .eq('activo', true)
+      .not('insumo_compartido_id', 'is', null)
+
+    const insumosConHijos = new Set<string>()
+    dbInsumosHijos?.forEach((p: any) => {
+      if (p.insumo_compartido_id) {
+        insumosConHijos.add(p.insumo_compartido_id)
+      }
+    })
+
+    // 3. Obtener conteos físicos, unidades utilizadas y regaladas ya registradas en esta jornada (si existen)
     const { data: dbConteos, error: contError } = await supabase
       .from('Auditoria_Inventario')
-      .select('producto_id, conteo_fisico, unidades_utilizadas')
+      .select('producto_id, conteo_fisico, unidades_utilizadas, unidades_regaladas')
       .eq('jornada_id', jornadaId)
 
-    const conteosExistentes: Record<string, { conteo_fisico: number; unidades_utilizadas: number }> = {}
+    if (contError) return { success: false, error: contError.message }
+
+    const conteosExistentes: Record<string, { conteo_fisico: number; unidades_utilizadas: number; unidades_regaladas: number }> = {}
     dbConteos?.forEach((item) => {
       conteosExistentes[item.producto_id] = {
         conteo_fisico: Number(item.conteo_fisico),
-        unidades_utilizadas: Number(item.unidades_utilizadas) || 0
+        unidades_utilizadas: Number(item.unidades_utilizadas) || 0,
+        unidades_regaladas: Number(item.unidades_regaladas) || 0
       }
     })
 
@@ -515,16 +542,22 @@ export async function obtenerProductosAuditoria(jornadaId: string): Promise<{
     const resultado = dbProductos.map((p) => {
       const stockInicial = Number(p.stockInicial) || 0
       const tieneRegistroPrevio = conteosExistentes[p.id] !== undefined
+      
+      const esInsumoCompartido = insumosConHijos.has(p.id)
+      const autocalculado = p.vendible || esInsumoCompartido
 
       let unidadesVendidas = 0
+      let unidadesRegaladas = 0
       if (tieneRegistroPrevio) {
         unidadesVendidas = conteosExistentes[p.id].unidades_utilizadas
+        unidadesRegaladas = conteosExistentes[p.id].unidades_regaladas
       } else {
-        // Al inicio, los productos comunes leen de comandas, los insumos empiezan en 0
-        unidadesVendidas = p.vendible ? (ventasAgrupadas[p.id] || 0) : 0
+        // Al inicio, los productos autocalculados (vendibles o insumos con hijos) leen de comandas, los insumos puros empiezan en 0
+        unidadesVendidas = autocalculado ? (ventasAgrupadas[p.id] || 0) : 0
+        unidadesRegaladas = autocalculado ? (regalosAgrupados[p.id] || 0) : 0
       }
 
-      const stockTeorico = Math.max(0, stockInicial - unidadesVendidas)
+      const stockTeorico = Math.max(0, stockInicial - unidadesVendidas - unidadesRegaladas)
       const conteoFisico = tieneRegistroPrevio ? conteosExistentes[p.id].conteo_fisico : undefined
 
       return {
@@ -532,9 +565,10 @@ export async function obtenerProductosAuditoria(jornadaId: string): Promise<{
         nombre: p.nombre,
         stockInicial,
         unidadesVendidas,
+        unidadesRegaladas,
         stockTeorico,
         conteoFisico,
-        vendible: p.vendible
+        vendible: autocalculado
       }
     })
 
@@ -678,22 +712,24 @@ export async function obtenerDetalleHistorialJornada(jornadaId: string): Promise
       .select('id, nombre, controla_stock')
       .eq('activo', true)
       .eq('controla_stock', true)
+      .is('insumo_compartido_id', null)
 
     if (prodError) return { success: false, error: 'Error al recuperar catálogo de productos: ' + prodError.message }
 
     // B. Obtener la auditoría de la jornada actual
     const { data: dbAuditoriaActual, error: audError } = await supabase
       .from('Auditoria_Inventario')
-      .select('producto_id, conteo_fisico, unidades_utilizadas, stock_inicial')
+      .select('producto_id, conteo_fisico, unidades_utilizadas, unidades_regaladas, stock_inicial')
       .eq('jornada_id', jornadaId)
 
     if (audError) return { success: false, error: 'Error al recuperar auditoría actual: ' + audError.message }
 
-    const auditoriaMap: Record<string, { conteo_fisico: number; unidades_utilizadas: number; stock_inicial: number }> = {}
+    const auditoriaMap: Record<string, { conteo_fisico: number; unidades_utilizadas: number; unidades_regaladas: number; stock_inicial: number }> = {}
     dbAuditoriaActual?.forEach((item) => {
       auditoriaMap[item.producto_id] = {
         conteo_fisico: Number(item.conteo_fisico) || 0,
         unidades_utilizadas: Number(item.unidades_utilizadas) || 0,
+        unidades_regaladas: Number(item.unidades_regaladas) || 0,
         stock_inicial: Number(item.stock_inicial) || 0
       }
     })
@@ -705,7 +741,8 @@ export async function obtenerDetalleHistorialJornada(jornadaId: string): Promise
       // Stock Inicial: leído directamente de la foto persistida en la auditoría de la jornada
       const stockInicial = audit ? audit.stock_inicial : 0
       const unidadesUtilizadas = audit ? audit.unidades_utilizadas : 0
-      const stockTeorico = Math.max(0, stockInicial - unidadesUtilizadas)
+      const unidadesRegaladas = audit ? audit.unidades_regaladas : 0
+      const stockTeorico = Math.max(0, stockInicial - unidadesUtilizadas - unidadesRegaladas)
       const conteoFisico = audit ? audit.conteo_fisico : 0
       const desvio = conteoFisico - stockTeorico
 
@@ -714,6 +751,7 @@ export async function obtenerDetalleHistorialJornada(jornadaId: string): Promise
         nombre: p.nombre,
         stockInicial,
         unidadesUtilizadas,
+        unidadesRegaladas,
         stockTeorico,
         conteoFisico,
         desvio
@@ -723,10 +761,13 @@ export async function obtenerDetalleHistorialJornada(jornadaId: string): Promise
     // Ordenar descendentemente por unidades utilizadas (rotación)
     auditoriaReporte.sort((a, b) => b.unidadesUtilizadas - a.unidadesUtilizadas)
 
-    // 5. Consolidación de Rendimiento de Ventas (sólo productos vendibles, excluyendo insumos)
+    // 5. Consolidación de Rendimiento de Ventas (sólo productos vendibles, excluyendo insumos y comandas de regalo)
     const rendimientoMap: Record<string, { nombre: string; categoria: string; cantidad: number; total: number }> = {}
     
     comandas?.forEach((c: any) => {
+      // Las comandas de regalo no computan en el rendimiento comercial de ingresos ni unidades cobradas
+      if (c.medio_pago === 'Regalo') return
+
       c.Comanda_Items?.forEach((item: any) => {
         const prod = item.Productos
         if (prod && prod.vendible) {

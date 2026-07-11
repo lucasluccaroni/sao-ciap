@@ -21,7 +21,7 @@ async function verificarAutenticado(supabase: Awaited<ReturnType<typeof createCl
  */
 export async function crearComanda(datos: {
   nro_beeper: number | null
-  medio_pago: 'Efectivo' | 'Mercado Pago'
+  medio_pago: 'Efectivo' | 'Mercado Pago' | 'Regalo'
   items: { producto_id: string; cantidad: number }[]
 }): Promise<{ success: boolean; error?: string; comandaId?: string }> {
   try {
