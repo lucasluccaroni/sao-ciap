@@ -620,6 +620,7 @@ export async function obtenerDetalleHistorialJornada(jornadaId: string): Promise
   gastos?: any[]
   comandas?: any[]
   auditoria?: any[]
+  rendimiento?: any[]
 }> {
   try {
     const supabase = await createClient()
