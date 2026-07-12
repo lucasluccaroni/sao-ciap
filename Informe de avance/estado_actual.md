@@ -6,7 +6,7 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 
 ## Resumen de Situación
 *   **Fase Actual**: Frontend / UI - Finalización de módulos transaccionales.
-*   **Último Hito Completado**: Módulo de Comandas de Regalo, Blindaje de Stock Compartido en caliente, e **Impresión de Ticket de Cocina** (comanda física compacta para ticketera térmica sin precios ni importes, comanda correlativa gigante, fecha localizada y beeper condicional para despacho).
+*   **Último Hito Completado**: Módulo de Comandas de Regalo, Blindaje de Stock Compartido en caliente, Impresión de Ticket de Cocina, e **Implementación de Políticas RLS Refinadas para Producción** (seguridad a nivel de fila que restringe el acceso directo por API a mozos en gastos, auditorías y modificación de comandas mediante la función `public.es_admin()`).
 *   **Estado de la Sesión**: Funcionalidades del bar completadas y validadas, listas para despliegue y pruebas finales por parte de la dueña.
 
 ---
@@ -29,6 +29,7 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 - [x] Crear script de limpieza selectiva de historial transaccional (`clear_historical_data.sql`) para pruebas de flujo de cierre de jornada y tickets sin pérdida de catálogo de productos/categorías.
 - [x] Alterar check constraint de la columna `medio_pago` en la tabla `Comandas` para admitir el valor `'Regalo'`.
 - [x] Modificar la función SQL RPC `procesar_comanda` para forzar a `0.00` el total de la cabecera de la comanda si se registra como `'Regalo'`, manteniendo la persistencia histórica de ítems y precios para auditoría.
+- [x] Refinar y estructurar las políticas Row Level Security (RLS) en `database/policies.sql` para producción, restringiendo accesos por API según el rol y creando la función `public.es_admin()` con seguridad definida para evitar recursiones.
 
 ### 3. Backend / API
 - [x] Configurar servidor Next.js y dependencias (Next.js 16 + Tailwind 4 + Supabase configurado en package.json)

@@ -53,7 +53,12 @@ El sistema implementa el middleware `JornadaGuard` y un sistema de WebSockets pa
 La transición de una jornada de 'Cerrada' a 'Abierta' y de 'Abierta' a 'En Auditoría' requiere la validación obligatoria del PIN de Administrador, el cual se procesa mediante un Hash SHA-256 en el cliente, asegurando que la clave nunca viaje en texto plano por la red.
 
 ### Seguridad a Nivel de Fila (RLS)
-Se implementa Row Level Security (RLS) en Supabase, garantizando que las políticas de acceso se ejecuten en el motor de la base de datos, blindando la información contra accesos no autorizados vía API.
+El sistema delega la autorización de acceso directamente en el motor de la base de datos de Supabase (PostgreSQL) para evitar adulteraciones de datos que esquiven el frontend de Next.js:
+- **Prevención de bucles recursivos**: Se define la función auxiliar `public.es_admin()` con la directiva `SECURITY DEFINER` en PostgreSQL. Esta función consulta el rol `'Admin'` del usuario logueado en la tabla `Usuarios` eludiendo de forma segura las restricciones de RLS de la propia tabla, lo cual evita el error de bucle recursivo infinito.
+- **Acceso Administrativo Exclusivo**: Las tablas `Gastos` y `Auditoria_Inventario` se encuentran completamente bloqueadas para mozos (el rol de empleado ordinario no tiene permitido leerlas ni editarlas); toda operación (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) requiere que el usuario posea el rol `'Admin'`.
+- **Integridad del Historial de Comandas**: Las tablas `Comandas` y `Comanda_Items` permiten la inserción de registros (`INSERT`) a todos los usuarios autenticados para que los mozos envíen comandas, verificando que el `usuario_id` del ticket coincida estrictamente con su sesión (`auth.uid() = usuario_id`). Sin embargo, se prohíbe la modificación (`UPDATE`) y el borrado (`DELETE`) a mozos ordinarios; estas capacidades de saneamiento histórico se reservan en exclusiva para administradores.
+- **Control de Menú y Catálogos**: Las tablas `Productos`, `Categorias_Productos`, `Categorias_Gastos` y `Jornadas` admiten lectura libre (`SELECT`) para todos los autenticados para inicializar la terminal de ventas, pero restringen la creación o edición únicamente a usuarios administradores.
+- **Control de Perfiles**: La tabla `Usuarios` permite que los empleados lean perfiles generales, pero bloquea la manipulación de PINs o altas de personal de forma exclusiva a administradores.
 
 ---
 
