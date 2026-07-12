@@ -23,7 +23,7 @@ export async function crearComanda(datos: {
   nro_beeper: number | null
   medio_pago: 'Efectivo' | 'Mercado Pago' | 'Regalo'
   items: { producto_id: string; cantidad: number }[]
-}): Promise<{ success: boolean; error?: string; comandaId?: string }> {
+}): Promise<{ success: boolean; error?: string; comandaId?: string; numeroTicket?: number; fecha?: string }> {
   try {
     const supabase = await createClient()
     const authCheck = await verificarAutenticado(supabase)
@@ -62,7 +62,28 @@ export async function crearComanda(datos: {
       return { success: false, error: rpcError.message || 'Error al procesar la comanda.' }
     }
 
-    return { success: true, comandaId }
+    // 3. Consultar el registro recién creado para obtener el número de ticket y la fecha oficial
+    const { data: comandaInfo, error: fetchError } = await supabase
+      .from('Comandas')
+      .select('numero_ticket, fecha')
+      .eq('comanda_id', comandaId)
+      .single()
+
+    if (fetchError || !comandaInfo) {
+      return {
+        success: true,
+        comandaId,
+        numeroTicket: 0,
+        fecha: new Date().toISOString()
+      }
+    }
+
+    return {
+      success: true,
+      comandaId,
+      numeroTicket: comandaInfo.numero_ticket,
+      fecha: comandaInfo.fecha
+    }
   } catch (err: any) {
     return { success: false, error: err.message || 'Ocurrió un error inesperado al procesar la comanda.' }
   }

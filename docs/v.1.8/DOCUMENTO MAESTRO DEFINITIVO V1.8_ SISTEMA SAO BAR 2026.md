@@ -216,6 +216,7 @@ Se realiza el cotejo financiero de Mercado Pago en el cierre:
 *   **Subdivisión por Categorías**: Al seleccionar la categoría "Todos los productos", la grilla clasifica y ordena dinámicamente las tarjetas mediante cabeceras divisionales y líneas de relieve coloreadas de acuerdo al tono de la categoría, separando visualmente las cervezas, comidas, tragos y cafetería.
 *   **Carrito y Medio de Pago**: Detalle del pedido, selector de beeper opcional (1 al 20) y selección de medio de pago (Efectivo/Mercado Pago/Regalo).
 *   **Botón de Regalo**: Se renderiza de forma compacta (`h-8`, bordes discontinuos transparentes y fuente pequeña de color negro `#080A0D` seminegrita cursiva) por debajo de los dos botones principales para evitar clics accidentales. Al seleccionarlo, se despliega una nota de advertencia explicativa en alto contraste.
+*   **Impresión de Comanda para Cocina**: Al registrar el pedido de manera exitosa, el modal de confirmación cambia su etiqueta visual a "Comanda Nro" y ofrece un botón de impresión de comanda (Cian `#30CFF2`) que activa el diálogo de impresión local. Este ticket se formatea en blanco y negro para ticketeras térmicas (76mm), ocultando la interfaz general mediante directivas CSS de impresión. Su diseño operativo contiene metadatos de fecha y hora local (con formato localizado en español, ej: "Viernes 28 de marzo de 2025"), número secuencial de la comanda en gigante (ej. #42), beeper asignado de forma condicional con icono 🔔 y el detalle de ítems de productos con cantidades prefijadas por x (sin precios ni importes de caja).
 *   **Scroll Adaptativo por Altura (Zoom/Pantallas Pequeñas)**: Mide mediante listener de `resize` el alto útil (`window.innerHeight`). Si este es inferior a `780px` (por zoom de 150-175% o pantallas pequeñas), desactiva las alturas fijas y el bloqueo de desborde del contenedor raíz, permitiendo scroll general de navegador, y restringe el listado de pedidos a un máximo de `max-h-[350px]` para asegurar la visibilidad total de los controles de pago e historial.
 *   **Cierre de Sesión Seguro**: La acción de «Salir» (mozo y administrador) despliega un modal con fondo desenfocado (`backdrop-blur-sm`) que requiere confirmación explícita.
 
@@ -233,6 +234,7 @@ Al invocar `procesar_comanda()`:
 6. Inserción en `comanda_items` (Capturando precio actual).
 7. Deducción del `stockActual` del producto o insumo asociado — **solo si `controla_stock = true`**.
 8. Si `medio_pago = 'Regalo'`, el total de la cabecera es forzado a `0.00`.
+9. Tras completarse la transacción atómica, la terminal mozo recibe de retorno el identificador correlativo (`numero_ticket` autoincremental de la base de datos) y la fecha oficial de registro de la comanda, habilitando la generación e impresión del ticket físico para la cocina.
 
 ### Flujo de Cierre de Jornada
 Este proceso debe ser ejecutado en orden estrictamente atómico:

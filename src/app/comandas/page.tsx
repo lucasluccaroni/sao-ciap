@@ -50,6 +50,16 @@ interface ComandaHistorial {
   beeper: number | null
 }
 
+interface TicketCocina {
+  numeroTicket: number
+  fecha: string
+  beeper: number | null
+  items: {
+    nombre: string
+    cantidad: number
+  }[]
+}
+
 export default function ComandasPage() {
   const pathname = usePathname()
   const esAdminRoute = pathname?.startsWith('/admin')
@@ -78,6 +88,7 @@ export default function ComandasPage() {
   const [modalLogoutOpen, setModalLogoutOpen] = useState(false)
   const [successTicket, setSuccessTicket] = useState<string>('')
   const [successBeeper, setSuccessBeeper] = useState<string>('')
+  const [ticketParaImprimir, setTicketParaImprimir] = useState<TicketCocina | null>(null)
   const [stockErrorMsg, setStockErrorMsg] = useState<string>('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -355,7 +366,18 @@ export default function ComandasPage() {
     try {
       const res = await crearComanda(payload)
       if (res.success) {
-        setSuccessTicket(res.comandaId || 'Generada')
+        // Almacenar los datos en el estado para la impresión del ticket de cocina
+        const nuevoTicket: TicketCocina = {
+          numeroTicket: res.numeroTicket || 0,
+          fecha: res.fecha || new Date().toISOString(),
+          beeper: payload.nro_beeper,
+          items: carrito.map(item => ({
+            nombre: item.producto.nombre,
+            cantidad: item.cantidad
+          }))
+        }
+        setTicketParaImprimir(nuevoTicket)
+        setSuccessTicket(res.numeroTicket ? `#${res.numeroTicket}` : 'Generada')
         setSuccessBeeper(beeper)
         setModalExitoOpen(true)
 
@@ -638,7 +660,8 @@ export default function ComandasPage() {
   }
 
   return (
-    <div className={`w-full bg-[#F26A1B] flex flex-col font-livvic text-[#F2F2F2] ${altoViewportSuficiente ? 'overflow-hidden ' + (esAdminRoute ? 'h-[calc(100vh-56px)]' : 'h-screen') : 'overflow-y-auto min-h-screen'}`}>
+    <>
+      <div className={`w-full bg-[#F26A1B] flex flex-col font-livvic text-[#F2F2F2] print:hidden ${altoViewportSuficiente ? 'overflow-hidden ' + (esAdminRoute ? 'h-[calc(100vh-56px)]' : 'h-screen') : 'overflow-y-auto min-h-screen'}`}>
       
       {/* 1. Header Superior (Oculto si se encuentra dentro del layout de Admin) */}
       {!esAdminRoute && (
@@ -999,7 +1022,7 @@ export default function ComandasPage() {
               </p>
               <div className="w-full bg-[#080A0D] border border-[#9D9D9D]/5 rounded-xl p-4 flex flex-col gap-2 mb-6">
                 <div className="flex justify-between items-center text-xs text-[#9D9D9D]">
-                  <span>Ticket Nro:</span>
+                  <span>Comanda Nro:</span>
                   <span className="font-mono font-bold text-[#30CFF2]">{successTicket}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs text-[#9D9D9D]">
@@ -1011,13 +1034,31 @@ export default function ComandasPage() {
                   )}
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setModalExitoOpen(false)}
-                className="w-full h-11 bg-[#F2F2F2] hover:bg-[#F2F2F2]/90 text-[#080A0D] font-bold text-xs uppercase tracking-wider rounded-lg transition-colors cursor-pointer"
-              >
-                Aceptar
-              </button>
+              
+              <div className="flex flex-col gap-2.5 w-full">
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.print()
+                  }}
+                  className="w-full h-11 bg-[#30CFF2] hover:bg-[#30CFF2]/90 text-[#080A0D] font-bold text-xs uppercase tracking-wider rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-2 active:scale-[0.99]"
+                >
+                  <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                  </svg>
+                  Imprimir Comanda
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setModalExitoOpen(false)
+                    setTicketParaImprimir(null)
+                  }}
+                  className="w-full h-11 bg-transparent hover:bg-white/5 border border-white/10 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition-colors cursor-pointer"
+                >
+                  Aceptar
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1083,5 +1124,86 @@ export default function ComandasPage() {
       {modalLogoutOpen && renderModalLogout()}
 
     </div>
-  )
+
+    {/* Elemento exclusivo de impresión para Ticketera de Cocina */}
+    {ticketParaImprimir && (
+      <div className="hidden print:block print:w-[76mm] print:mx-auto print:bg-white print:text-black print:p-4 print:font-mono print:text-xs">
+        {/* Encabezado */}
+        <div className="text-center select-none">
+          <h2 className="text-base font-bold uppercase tracking-widest">SAO BAR</h2>
+        </div>
+        
+        <div className="border-t border-dashed border-black/35 my-2" />
+        
+        {/* Metadatos de Tiempo */}
+        <div className="text-center text-[10px] space-y-0.5 leading-tight select-none">
+          <p>
+            {(() => {
+              try {
+                const fecha = new Date(ticketParaImprimir.fecha)
+                let formateada = new Intl.DateTimeFormat('es-AR', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric'
+                }).format(fecha)
+                return formateada.charAt(0).toUpperCase() + formateada.slice(1)
+              } catch (e) {
+                return ''
+              }
+            })()}
+          </p>
+          <p>
+            {(() => {
+              try {
+                const fecha = new Date(ticketParaImprimir.fecha)
+                const hora = String(fecha.getHours()).padStart(2, '0')
+                const min = String(fecha.getMinutes()).padStart(2, '0')
+                return `${hora}:${min} hs`
+              } catch (e) {
+                return ''
+              }
+            })()}
+          </p>
+        </div>
+        
+        <div className="border-t border-dashed border-black/35 my-2" />
+        
+        {/* Identificador de Comanda */}
+        <div className="text-center my-3 select-none">
+          <span className="text-[10px] uppercase font-bold tracking-wider text-gray-500">Comanda</span>
+          <h1 className="text-4xl font-extrabold mt-1">#{ticketParaImprimir.numeroTicket}</h1>
+        </div>
+        
+        {/* Beeper (Condicional) */}
+        {ticketParaImprimir.beeper !== null && (
+          <>
+            <div className="border-t border-dashed border-black/35 my-2" />
+            <div className="text-center my-3 select-none">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-gray-500">Beeper</span>
+              <div className="flex items-center justify-center gap-2 mt-1 text-2xl font-extrabold">
+                <span>🔔</span>
+                <span>{ticketParaImprimir.beeper}</span>
+              </div>
+            </div>
+          </>
+        )}
+        
+        <div className="border-t border-dashed border-black/35 my-2" />
+        
+        {/* Listado de Ítems */}
+        <div className="space-y-1.5 text-[11px] my-3">
+          {ticketParaImprimir.items.map((item, idx) => (
+            <div key={idx} className="flex justify-between items-start leading-tight border-b border-black/5 pb-1 last:border-0 last:pb-0">
+              <span className="uppercase text-left font-semibold pr-2">{item.nombre}</span>
+              <span className="font-bold shrink-0 text-right">x{item.cantidad}</span>
+            </div>
+          ))}
+        </div>
+        
+        <div className="border-t border-dashed border-black/35 mt-4" />
+      </div>
+    )}
+  </>
+)
 }

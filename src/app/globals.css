@@ -38,3 +38,11 @@
   background-repeat: repeat;
   background-size: 250px;
 }
+
+@media print {
+  body, html {
+    background-color: #ffffff !important;
+    background-image: none !important;
+    color: #000000 !important;
+  }
+}

@@ -6,7 +6,7 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 
 ## Resumen de Situación
 *   **Fase Actual**: Frontend / UI - Finalización de módulos transaccionales.
-*   **Último Hito Completado**: Módulo de Comandas de Regalo (registro de obsequios a valor cero en caja con descuento de existencias) y Blindaje de Stock Compartido unificado en caliente (sincronización reactiva del carrito y control de límites para pizzas enlazadas).
+*   **Último Hito Completado**: Módulo de Comandas de Regalo, Blindaje de Stock Compartido en caliente, e **Impresión de Ticket de Cocina** (comanda física compacta para ticketera térmica sin precios ni importes, comanda correlativa gigante, fecha localizada y beeper condicional para despacho).
 *   **Estado de la Sesión**: Funcionalidades del bar completadas y validadas, listas para despliegue y pruebas finales por parte de la dueña.
 
 ---
@@ -42,6 +42,7 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
     - [x] Server Actions de Productos y Categorías (`src/app/actions/productos.ts`) para consultas y modificaciones
     - [x] Adaptar Server Action `obtenerProductosAuditoria` para deducir las unidades regaladas en el cálculo del stock teórico e incluirlas en el retorno.
     - [x] Adaptar Server Action `obtenerDetalleHistorialJornada` para recuperar unidades regaladas históricas de la auditoría.
+    - [x] Adaptar Server Action `crearComanda` para retornar el número de comanda correlativo (`numeroTicket`) y la fecha oficial generados en la base de datos.
 
 ### 4. Frontend / UI
 - [x] Implementar pantallas segun disenos en `/design`
@@ -66,6 +67,7 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
         - [x] Subdivisión estética y dinámica por categorías en la grilla al filtrar por "Todos los productos", implementando cabeceras personalizadas con colores de marca y líneas divisorias de relieve.
         - [x] Refactorizar la deducción de stock local contra la acumulación de consumos por insumo compartido en el carrito en tiempo real, bloqueando sobreventas.
         - [x] Incorporar botón compacto y ultra-discreto "Regalo de la Casa" (medio de pago `'Regalo'`) con nota aclaratoria para registrar las comandas de obsequio.
+        - [x] Incorporar opción de impresión física de comanda de cocina directamente desde el modal de éxito del pedido, usando estilos de impresión y un diseño compacto para ticketera térmica (con número de comanda destacado en gigante, fecha localizada y beeper opcional).
     - [x] Historial de Jornadas (`/admin/historial`)
         - [x] Incluir la columna "Regalos" en la visualización del stock histórico de la jornada auditada para transparentar desvíos.
     - [x] Calculadora de Costos (`/admin/calculadora`)
