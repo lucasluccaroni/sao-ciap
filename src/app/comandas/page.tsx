@@ -30,6 +30,7 @@ interface Producto {
   activo: boolean
   vendible: boolean
   controla_stock: boolean
+  insumo_compartido_id?: string | null
   Categorias_Productos?: {
     nombre: string
     color_fondo: string
