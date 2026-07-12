@@ -742,7 +742,7 @@ export default function ComandasPage() {
                     <div className="flex items-center gap-3 mb-4 select-none">
                       <span 
                         className="px-3.5 py-1 rounded text-xs font-bold uppercase tracking-wider shadow-sm"
-                        style={{ backgroundColor: cat.color_fondo, color: cat.color_text || '#FFFFFF' }}
+                        style={{ backgroundColor: cat.color_fondo, color: cat.color_texto || '#FFFFFF' }}
                       >
                         {cat.nombre}
                       </span>
