@@ -152,27 +152,27 @@ La base de datos se estructurará de la siguiente manera:
 ---
 
 ## Siguientes Hitos de Desarrollo (Planificados)
-
+ 
 ### Fase 5: Pruebas de Carga, Concurrencia y Estabilidad
-- [ ] Validar el comportamiento de las 4 terminales activas de manera concurrente, asegurando que el bloqueo pesimista en `procesar_comanda` resuelva transacciones concurrentes sin causar deadlocks o desvíos numéricos de tickets.
-- [ ] Realizar pruebas de estrés a la persistencia y al canal WebSocket de Supabase Realtime bajo alto volumen de eventos.
-- [ ] Verificar la ausencia de fugas de memoria en sesiones de terminal de comandas prolongadas (> 8 horas).
-
+- [x] Validar el comportamiento de las 4 terminales activas de manera concurrente, asegurando que el bloqueo pesimista en `procesar_comanda` resuelva transacciones concurrentes sin causar deadlocks o desvíos numéricos de tickets.
+- [x] Realizar pruebas de estrés a la persistencia y al canal WebSocket de Supabase Realtime bajo alto volumen de eventos.
+- [x] Verificar la ausencia de fugas de memoria en sesiones de terminal de comandas prolongadas (> 8 horas).
+ 
 ### Fase 6: Políticas RLS y Despliegue en Producción
-- [ ] Refinar las políticas Row Level Security (RLS) en Supabase para producción, restringiendo inserciones o lecturas basadas estrictamente en los claims de JWT del usuario autenticado.
-- [ ] Configurar el entorno de hosting para producción en Vercel o Netlify para el servidor Next.js.
-- [ ] Configurar respaldos automáticos diarios (backups) del esquema y datos operacionales en Supabase.
-
+- [x] Refinar las políticas Row Level Security (RLS) en Supabase para producción, restringiendo inserciones o lecturas basadas estrictamente en los claims de JWT del usuario autenticado.
+- [x] Configurar el entorno de hosting para producción en Vercel o Netlify para el servidor Next.js.
+- [x] Configurar respaldos automáticos diarios (backups) del esquema y datos operacionales en Supabase (Resuelto nativamente por la infraestructura del plan de Supabase).
+ 
 ### Fase 7: Analíticas Avanzadas y Exportación de Datos
 - [ ] Diseñar el panel mensual de rendimiento comercial del administrador (gráficos históricos de ingresos, egresos, mermas de stock y desvíos acumulados).
 - [ ] Implementar exportador de auditorías de inventario e historial de jornadas a formato CSV/PDF para contabilidad externa.
-
+ 
 ---
-
+ 
 ## Instrucciones para la Siguiente IA (Relevo)
 Si eres la IA que retoma el desarrollo en un nuevo chat:
-1.  **Entorno**: Workspace local `D:\repositorios\sao-ciap`. La base de datos Supabase ya está 100% inicializada y configurada.
-2.  **Estado actual**: Todos los flujos transaccionales y de inventario del bar (Login, ABM de productos con stock compartido, Caja del Día, Cierre con Auditoría Física inteligente, Historial completo con reportes de desvíos, y la Calculadora de Costos imprimible) se encuentran 100% completados, integrados y validados.
-3.  **Siguiente Paso Obligatorio**: Iniciar con el usuario las pruebas de concurrencia y estrés de terminales activas descritas en la **Fase 5**.
+1.  **Entorno**: Workspace local `D:\repositorios\sao-ciap` y entorno productivo activo en Vercel conectado a la rama estable `production`. La base de datos Supabase ya está 100% securizada con políticas RLS para producción.
+2.  **Estado actual**: Todos los flujos transaccionales y de inventario del bar (Login, ABM de productos con stock compartido, Caja del Día, Cierre con Auditoría Física inteligente, Historial completo, la Calculadora de Costos imprimible y la Impresión del Ticket de Cocina) se encuentran 100% integrados, desplegados en la nube y validados en producción.
+3.  **Siguiente Paso Obligatorio**: Iniciar con el desarrollo de la **Fase 7: Analíticas Avanzadas y Exportación de Datos** (diseñar el panel mensual del administrador y la exportación de auditorías a CSV/PDF).
 4.  **Estética**: Recuerda utilizar Tailwind 4 y aplicar los lineamientos de diseño moderno (oscuro premium mate, bordes de vidrio `#9D9D9D/15`, tonos ocre/dorado y naranja quemado para acciones). Revisa `/design` para obtener el contexto visual.
 
