@@ -4,9 +4,7 @@
 -- ============================================================================
 
 -- 1. Crear usuario Administrador de Pruebas
--- Email: admin@test.com
--- Contraseña: admin123
--- PIN de seguridad: 1234
+-- Cuenta admin de ejemplo - reemplazar valores antes de ejecutar
 INSERT INTO auth.users (
   instance_id,
   id,
@@ -24,8 +22,8 @@ INSERT INTO auth.users (
   'a3a3a3a3-a3a3-a3a3-a3a3-a3a3a3a3a3a3',
   'authenticated',
   'authenticated',
-  'admin@test.com',
-  crypt('admin123', gen_salt('bf')),
+  'REEMPLAZAR_EMAIL_ADMIN',
+  crypt('REEMPLAZAR_PASSWORD_ADMIN', gen_salt('bf')),
   now(),
   '{"provider":"email","providers":["email"]}',
   '{"nombre":"Administrador de Pruebas","rol":"Admin"}',
@@ -33,16 +31,16 @@ INSERT INTO auth.users (
   now()
 ) ON CONFLICT (id) DO NOTHING;
 
--- Setear el PIN del administrador (PIN: "1234" -> SHA-256: "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4")
+-- Setear el PIN del administrador
+-- Reemplazar por el hash SHA-256 del PIN real elegido
 -- NOTA: El trigger handle_new_user ya copió al usuario a public."Usuarios". Aquí actualizamos su PIN.
 UPDATE public."Usuarios"
-SET pin = '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4'
-WHERE email = 'admin@test.com';
+SET pin = 'REEMPLAZAR_HASH_PIN_SHA256'
+WHERE email = 'REEMPLAZAR_EMAIL_ADMIN';
 
 
 -- 2. Crear usuario Empleado de Pruebas
--- Email: empleado@test.com
--- Contraseña: empleado123
+-- Cuenta empleado de ejemplo - reemplazar valores antes de ejecutar
 INSERT INTO auth.users (
   instance_id,
   id,
@@ -60,8 +58,8 @@ INSERT INTO auth.users (
   'e5e5e5e5-e5e5-e5e5-e5e5-e5e5e5e5e5e5',
   'authenticated',
   'authenticated',
-  'empleado@test.com',
-  crypt('empleado123', gen_salt('bf')),
+  'REEMPLAZAR_EMAIL_EMPLEADO',
+  crypt('REEMPLAZAR_PASSWORD_EMPLEADO', gen_salt('bf')),
   now(),
   '{"provider":"email","providers":["email"]}',
   '{"nombre":"Empleado de Pruebas","rol":"Empleado"}',

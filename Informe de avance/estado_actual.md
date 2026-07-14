@@ -17,6 +17,7 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 - [x] Crear sistema de control de estado en `/Informe de avance`
 - [x] Analizar requerimientos en `/docs`
 - [x] Analizar diseños en `/design`
+- [x] Ubicar y eliminar archivos desktop.ini residuales de Google Drive (13 archivos identificados y eliminados exitosamente)
 
 ### 2. Base de Datos
 - [x] Diseñar esquema de la base de datos (Plan conceptual aprobado)
@@ -30,6 +31,7 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 - [x] Alterar check constraint de la columna `medio_pago` en la tabla `Comandas` para admitir el valor `'Regalo'`.
 - [x] Modificar la función SQL RPC `procesar_comanda` para forzar a `0.00` el total de la cabecera de la comanda si se registra como `'Regalo'`, manteniendo la persistencia histórica de ítems y precios para auditoría.
 - [x] Refinar y estructurar las políticas Row Level Security (RLS) en `database/policies.sql` para producción, restringiendo accesos por API según el rol y creando la función `public.es_admin()` con seguridad definida para evitar recursiones.
+- [x] Refactorizar `database/seed_test_users.sql` para remover credenciales, correos electrónicos y PINs en texto plano, reemplazándolos con placeholders de seguridad genéricos.
 
 ### 3. Backend / API
 - [x] Configurar servidor Next.js y dependencias (Next.js 16 + Tailwind 4 + Supabase configurado en package.json)
