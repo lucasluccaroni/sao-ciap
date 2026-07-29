@@ -57,6 +57,7 @@ export default function ProductosPage() {
   // Modales de Productos
   const [modalProdOpen, setModalProdOpen] = useState(false)
   const [prodEditando, setProdEditando] = useState<Producto | null>(null) // null = Crear, Producto = Editar
+  const [prodErrorMsg, setProdErrorMsg] = useState('')
   const [prodForm, setProdForm] = useState({
     nombre: '',
     categoria_id: '',
@@ -131,6 +132,7 @@ export default function ProductosPage() {
 
   const abrirCrearProducto = () => {
     setProdEditando(null)
+    setProdErrorMsg('')
     setProdForm({
       nombre: '',
       categoria_id: categorias.filter(c => c.activo)[0]?.id || '',
@@ -149,6 +151,7 @@ export default function ProductosPage() {
 
   const abrirEditarProducto = (prod: Producto) => {
     setProdEditando(prod)
+    setProdErrorMsg('')
     setProdForm({
       nombre: prod.nombre,
       categoria_id: prod.categoria_id,
@@ -167,14 +170,14 @@ export default function ProductosPage() {
 
   const handleGuardarProducto = async (e: React.FormEvent) => {
     e.preventDefault()
-    setErrorMsg('')
+    setProdErrorMsg('')
 
     if (!prodForm.nombre.trim()) {
-      setErrorMsg('El nombre del producto es obligatorio.')
+      setProdErrorMsg('El nombre del producto es obligatorio.')
       return
     }
     if (!prodForm.categoria_id) {
-      setErrorMsg('Debe seleccionar una categoria.')
+      setProdErrorMsg('Debe seleccionar una categoria.')
       return
     }
 
@@ -184,11 +187,11 @@ export default function ProductosPage() {
     const stockActualNum = parseInt(prodForm.stockActual, 10)
 
     if (isNaN(precioNum) || precioNum < 0) {
-      setErrorMsg('El precio debe ser un numero valido mayor o igual a 0.')
+      setProdErrorMsg('El precio debe ser un numero valido mayor o igual a 0.')
       return
     }
     if (isNaN(stockIdealNum) || stockIdealNum < 0) {
-      setErrorMsg('El stock ideal debe ser un numero entero mayor o igual a 0.')
+      setProdErrorMsg('El stock ideal debe ser un numero entero mayor o igual a 0.')
       return
     }
 
@@ -197,7 +200,7 @@ export default function ProductosPage() {
       if (prodEditando) {
         // Editar
         if (isNaN(stockActualNum) || stockActualNum < 0) {
-          setErrorMsg('El stock actual debe ser un numero entero mayor o igual a 0.')
+          setProdErrorMsg('El stock actual debe ser un numero entero mayor o igual a 0.')
           setLoading(false)
           return
         }
@@ -220,12 +223,12 @@ export default function ProductosPage() {
           setModalProdOpen(false)
           await cargarDatos()
         } else {
-          setErrorMsg(res.error || 'Error al actualizar el producto.')
+          setProdErrorMsg(res.error || 'Error al actualizar el producto.')
         }
       } else {
         // Crear
         if (isNaN(stockInicialNum) || stockInicialNum < 0) {
-          setErrorMsg('El stock inicial debe ser un numero entero mayor o igual a 0.')
+          setProdErrorMsg('El stock inicial debe ser un numero entero mayor o igual a 0.')
           setLoading(false)
           return
         }
@@ -248,11 +251,11 @@ export default function ProductosPage() {
           setModalProdOpen(false)
           await cargarDatos()
         } else {
-          setErrorMsg(res.error || 'Error al crear el producto.')
+          setProdErrorMsg(res.error || 'Error al crear el producto.')
         }
       }
     } catch (err: any) {
-      setErrorMsg('Ocurrio un error inesperado al guardar el producto.')
+      setProdErrorMsg('Ocurrio un error inesperado al guardar el producto.')
     } finally {
       setLoading(false)
     }
@@ -727,6 +730,23 @@ export default function ProductosPage() {
 
             {/* Formulario */}
             <form onSubmit={handleGuardarProducto}>
+              {/* Alerta de Error dentro del Modal */}
+              {prodErrorMsg && (
+                <div className="mx-6 mt-4 p-3.5 bg-[#E2484A]/10 border border-[#E2484A]/30 rounded-lg text-xs text-[#E2484A] font-medium flex items-center justify-between animate-scale-in select-none">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold">⚠️</span>
+                    <span>{prodErrorMsg}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setProdErrorMsg('')}
+                    className="text-[#E2484A] hover:text-[#F2F2F2] font-bold text-sm ml-2"
+                  >
+                    &times;
+                  </button>
+                </div>
+              )}
+
               <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
                 
                 {/* Nombre */}

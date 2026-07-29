@@ -5,9 +5,9 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 ---
 
 ## Resumen de Situación
-*   **Fase Actual**: Frontend / UI - Finalización de módulos transaccionales.
-*   **Último Hito Completado**: Módulo de Comandas de Regalo, Blindaje de Stock Compartido en caliente, Impresión de Ticket de Cocina, e **Implementación de Políticas RLS Refinadas para Producción** (seguridad a nivel de fila que restringe el acceso directo por API a mozos en gastos, auditorías y modificación de comandas mediante la función `public.es_admin()`).
-*   **Estado de la Sesión**: Funcionalidades del bar completadas y validadas, listas para despliegue y pruebas finales por parte de la dueña.
+*   **Fase Actual**: Desarrollo del Bot Asistente de IA (RAG + Tool Use) — Rama `asistente`.
+*   **Último Hito Completado**: Inicialización de la rama `asistente`, vinculación del entorno de desarrollo duplicado en Supabase (`.env.local` fuera del repo), sincronización completa del esquema v1.8 (`database/schema.sql`, `database/policies.sql`) y creación del script de infraestructura vectorial `database/asistente_pgvector.sql`.
+*   **Estado de la Sesión**: Entorno de desarrollo aislado 100% verificado y funcional. Listo para ejecutar `asistente_pgvector.sql` en Supabase e iniciar la construcción del script de ingesta de conocimiento en TypeScript.
 
 ---
 
@@ -168,13 +168,36 @@ La base de datos se estructurará de la siguiente manera:
 ### Fase 7: Analíticas Avanzadas y Exportación de Datos
 - [ ] Diseñar el panel mensual de rendimiento comercial del administrador (gráficos históricos de ingresos, egresos, mermas de stock y desvíos acumulados).
 - [ ] Implementar exportador de auditorías de inventario e historial de jornadas a formato CSV/PDF para contabilidad externa.
+
+### Fase 8: Bot Asistente de IA (RAG + Tool Use - Rama `asistente`)
+- [x] Establecer perfil agéntico y directivas desde `.agents/AGENTS.md`.
+- [x] Analizar especificación maestra y arquitectura del proyecto v1.8 (`docs/v.1.8`).
+- [x] Analizar plan de implementación y base de conocimiento estable en `docs/v1.9`.
+- [x] Crear y cambiar a la rama Git aislada `asistente`.
+- [x] Configuración de la base de datos Supabase duplicada para desarrollo y vinculación de variables de entorno fuera del repositorio en `next.config.ts`.
+- [x] Sincronización completa del esquema v1.8 (`vendible`, `controla_stock`, `GRANT`s) en `database/schema.sql` y `database/policies.sql`.
+- [x] Crear script SQL de infraestructura vectorial `database/asistente_pgvector.sql` (`pgvector`, tabla `knowledge_chunks`, índice HNSW y función `match_knowledge`).
+- [x] Inserción de la nueva sección de conocimiento estable sobre Stock Compartido vs Elaboración Instantánea en `sao_bar_conocimiento_estable.md`.
+- [x] Desarrollo del módulo de Embeddings en TypeScript (`src/lib/ai/embeddings.ts`) desacoplado mediante patrón Adapter/Factory.
+- [x] Desarrollo del módulo LLM y Tool Calling (`src/lib/ai/llm.ts`) desacoplado mediante patrón Adapter/Factory (OpenRouter, Groq, HuggingFace, OpenAI).
+- [x] Creación de contratos e interfaces puras TypeScript (`src/lib/ai/types.ts`) para piloto automático sin vendor lock-in.
+- [x] Desarrollo de las herramientas de datos en tiempo real (`src/lib/ai/tools.ts`).
+- [x] Implementación de la Server Action del asistente (`src/app/actions/asistente.ts`).
+- [x] Integración de Groq LLM (`llama-3.3-70b-versatile`) validada con Tool Calls e Inferencia RAG en consola (`scripts/test_assistant_action.ts`).
+- [x] Implementación de Resiliencia con Failover Automático (Groq -> OpenRouter) y homogeneización de hiperparámetros (`temperature: 0.2`, `top_p: 0.9`, `max_tokens: 1024`).
+- [x] Redacción del **Documento Maestro Definitivo v1.9** (`docs/v1.9/DOCUMENTO MAESTRO DEFINITIVO V1.9_ SISTEMA SAO BAR 2026.md`).
+- [x] Implementación de la herramienta dedicada a la auditoría de gastos `consultarGastosJornada` (desglose por motivo, monto, categoría y mayor gasto).
+- [x] Optimización tipográfica y aprovechamiento de espacio en las tarjetas de productos de la pantalla de comandas (`src/app/comandas/page.tsx`), incrementando el tamaño del nombre del producto a `text-sm font-bold text-[#F2F2F2]` para máxima legibilidad.
+- [x] Ampliación de herramientas para soportar la consulta de balances y ventas de la **Última Jornada Cerrada** y consulta directa de **Categorías**.
+- [x] Implementación de **Failover Bidireccional de Alta Disponibilidad** (OpenRouter primario $\leftrightarrow$ Groq respaldo) en `src/lib/ai/llm.ts` con ejecución apátrida (Stateless).
+- [x] Actualización de la especificación maestra v1.9 con OpenRouter como motor principal por defecto (`meta-llama/llama-3.3-70b-instruct`).
  
 ---
  
 ## Instrucciones para la Siguiente IA (Relevo)
 Si eres la IA que retoma el desarrollo en un nuevo chat:
-1.  **Entorno**: Workspace local `D:\repositorios\sao-ciap` y entorno productivo activo en Vercel conectado a la rama estable `production`. La base de datos Supabase ya está 100% securizada con políticas RLS para producción.
-2.  **Estado actual**: Todos los flujos transaccionales y de inventario del bar (Login, ABM de productos con stock compartido, Caja del Día, Cierre con Auditoría Física inteligente, Historial completo, la Calculadora de Costos imprimible y la Impresión del Ticket de Cocina) se encuentran 100% integrados, desplegados en la nube y validados en producción.
-3.  **Siguiente Paso Obligatorio**: Iniciar con el desarrollo de la **Fase 7: Analíticas Avanzadas y Exportación de Datos** (diseñar el panel mensual del administrador y la exportación de auditorías a CSV/PDF).
-4.  **Estética**: Recuerda utilizar Tailwind 4 y aplicar los lineamientos de diseño moderno (oscuro premium mate, bordes de vidrio `#9D9D9D/15`, tonos ocre/dorado y naranja quemado para acciones). Revisa `/design` para obtener el contexto visual.
+1.  **Entorno**: Workspace local `D:\repositorios\sao-ciap` posicionado en la rama `asistente`. La aplicación está conectada a la base de datos duplicada de pruebas mediante variables de entorno configuradas fuera del repositorio (`D:\secrets\sao-ciap-asistente\.env.local`).
+2.  **Estado actual**: La rama `asistente` y la base de datos duplicada de desarrollo se encuentran 100% validadas, integradas y sincrónicas con la versión v1.8 del sistema. El script `database/asistente_pgvector.sql` se encuentra listo en el repositorio.
+3.  **Siguiente Paso Obligatorio**: Ejecutar `database/asistente_pgvector.sql` en el SQL Editor de Supabase de desarrollo (si aún no se ejecutó) y proceder a programar el script TypeScript de ingesta y vectorización para procesar `docs/v1.9/sao_bar_conocimiento_estable.md`.
+4.  **Estética**: Recuerda utilizar Tailwind 4 y aplicar los lineamientos de diseño moderno (oscuro premium mate `#1A1A1A`, bordes de vidrio `#9D9D9D/15`, tonos naranja `#F26A1B` y acentos cian `#30CFF2`). Revisa `/design` y `PLAN_IMPLEMENTACION_ASISTENTE_IA.md` para el contexto visual.
 

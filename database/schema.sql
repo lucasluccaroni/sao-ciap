@@ -45,6 +45,8 @@ CREATE TABLE public."Productos" (
     "stockActual" INTEGER NOT NULL CHECK ("stockActual" >= 0),
     unidad VARCHAR(10) NOT NULL CHECK (unidad IN ('u', 'lt', 'ml')),
     activo BOOLEAN DEFAULT true NOT NULL,
+    vendible BOOLEAN DEFAULT true NOT NULL,
+    controla_stock BOOLEAN DEFAULT true NOT NULL,
     insumo_compartido_id UUID REFERENCES public."Productos"(id) ON DELETE SET NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
 );

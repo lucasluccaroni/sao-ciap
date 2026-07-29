@@ -32,8 +32,8 @@ INSERT INTO auth.users (
 ) ON CONFLICT (id) DO NOTHING;
 
 -- Setear el PIN del administrador
--- Reemplazar por el hash SHA-256 del PIN real elegido
--- NOTA: El trigger handle_new_user ya copió al usuario a public."Usuarios". Aquí actualizamos su PIN.
+-- NOTA: El trigger handle_new_user ya copió al usuario a public."Usuarios". Aquí se actualiza su PIN.
+-- Reemplazar por el hash SHA-256 del PIN elegido para el entorno correspondiente.
 UPDATE public."Usuarios"
 SET pin = 'REEMPLAZAR_HASH_PIN_SHA256'
 WHERE email = 'REEMPLAZAR_EMAIL_ADMIN';

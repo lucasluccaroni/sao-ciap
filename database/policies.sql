@@ -1,12 +1,12 @@
 -- ============================================================================
 -- SAO BAR 2026 - POLÍTICAS DE SEGURIDAD RLS (Row Level Security) - PRODUCCIÓN
 -- ============================================================================
--- Estas políticas a nivel de base de datos aseguran que:
--- 1. Nadie sin una sesión válida (authenticated) pueda leer o escribir datos.
--- 2. Los empleados (Mozos) solo tengan permisos operativos esenciales de lectura
---    de catálogo, jornadas y registro de comandas (sin poder editar ni borrar).
--- 3. Los administradores tengan privilegios totales sobre la gestión financiera,
---    de inventario, gastos y usuarios del sistema.
+
+-- Otorgar permisos de esquema y tablas a los roles de Supabase (Requerido para RLS)
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL ROUTINES IN SCHEMA public TO anon, authenticated, service_role;
 
 -- 0. Crear función auxiliar con privilegios elevados para evitar bucles recursivos en RLS
 CREATE OR REPLACE FUNCTION public.es_admin()

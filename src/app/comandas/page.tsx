@@ -618,16 +618,16 @@ export default function ComandasPage() {
         }`}
       >
         <div>
-          {/* Fila superior: Unidad y Círculo de Stock */}
-          <div className="flex justify-between items-start">
-            <span className="text-[10px] uppercase font-bold text-[#9D9D9D] tracking-wide select-none">
+          {/* Fila superior: Nombre del Producto y Círculo de Stock */}
+          <div className="flex justify-between items-start gap-2">
+            <span className="text-sm font-bold uppercase text-[#F2F2F2] tracking-wide leading-snug select-none line-clamp-2">
               {prod.nombre}
             </span>
-            <div className={`w-2.5 h-2.5 rounded-full ${colorCirculo} shadow-sm`} />
+            <div className={`w-2.5 h-2.5 rounded-full ${colorCirculo} shadow-sm shrink-0 mt-1`} />
           </div>
 
           {/* Precio */}
-          <h4 className="font-mono text-2xl font-bold text-white mt-1">
+          <h4 className="font-mono text-xl font-bold text-white mt-1.5">
             ${prod.precio.toLocaleString('es-AR', { minimumFractionDigits: 0 })}
           </h4>
         </div>

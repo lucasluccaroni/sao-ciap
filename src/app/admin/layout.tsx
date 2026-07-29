@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import BotonSalirAdmin from '@/components/BotonSalirAdmin'
 import AdminNav from '@/components/AdminNav'
+import AsistenteWidgetAdmin from '@/components/admin/AsistenteWidgetAdmin'
 
 export default async function AdminLayout({
   children,
@@ -92,6 +93,9 @@ export default async function AdminLayout({
       <main className="flex-1 flex flex-col min-h-0 bg-[#080A0D]">
         {children}
       </main>
+
+      {/* Solapa Emergente del Asistente de IA (Solo Administrador) */}
+      <AsistenteWidgetAdmin />
     </div>
   )
 }

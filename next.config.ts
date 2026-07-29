@@ -2,8 +2,8 @@ import type { NextConfig } from "next";
 import dotenv from "dotenv";
 
 // TODO: Reemplaza esta ruta con la ruta absoluta real donde guardaste tu .env.local
-// Ejemplo en Windows: "D:\\secrets\\sao-ciap\\.env.local"
-dotenv.config({ path: "D:\\secrets\\sao-ciap\\.env.local" });
+// Ejemplo en Windows: "D:\\secrets\\proyecto\\.env.local"
+dotenv.config({ path: "D:\\secrets\\sao-ciap-asistente\\.env.local" });
 
 const nextConfig: NextConfig = {
   /* config options here */
