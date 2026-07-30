@@ -40,9 +40,38 @@
 }
 
 @media print {
-  body, html {
+  @page {
+    margin: 0;
+    size: auto;
+  }
+
+  html,
+  body,
+  body * {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  html,
+  body {
     background-color: #ffffff !important;
     background-image: none !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Excepciones explícitas para elementos con clase print:bg-white o print:bg-gray-100 */
+  .print\:bg-white {
+    background-color: #ffffff !important;
+  }
+
+  .print\:bg-gray-100 {
+    background-color: #f3f4f6 !important;
+  }
+
+  .print\:text-black {
     color: #000000 !important;
   }
 }

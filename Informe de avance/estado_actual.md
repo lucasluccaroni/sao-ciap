@@ -71,6 +71,7 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
         - [x] Refactorizar la deducción de stock local contra la acumulación de consumos por insumo compartido en el carrito en tiempo real, bloqueando sobreventas.
         - [x] Incorporar botón compacto y ultra-discreto "Regalo de la Casa" (medio de pago `'Regalo'`) con nota aclaratoria para registrar las comandas de obsequio.
         - [x] Incorporar opción de impresión física de comanda de cocina directamente desde el modal de éxito del pedido, usando estilos de impresión y un diseño compacto para ticketera térmica (con número de comanda destacado en gigante, fecha localizada y beeper opcional).
+        - [x] Optimizar la regla global `@media print` en `src/app/globals.css` y `AdminLayout` para forzar fondo transparente/blanco en la hoja y evitar la impresión del fondo negro circundante en impresoras comunes (A4/Oficio).
     - [x] Historial de Jornadas (`/admin/historial`)
         - [x] Incluir la columna "Regalos" en la visualización del stock histórico de la jornada auditada para transparentar desvíos.
     - [x] Calculadora de Costos (`/admin/calculadora`)
@@ -196,8 +197,10 @@ La base de datos se estructurará de la siguiente manera:
  
 ## Instrucciones para la Siguiente IA (Relevo)
 Si eres la IA que retoma el desarrollo en un nuevo chat:
-1.  **Entorno**: Workspace local `D:\repositorios\sao-ciap` posicionado en la rama `asistente`. La aplicación está conectada a la base de datos duplicada de pruebas mediante variables de entorno configuradas fuera del repositorio (`D:\secrets\sao-ciap-asistente\.env.local`).
-2.  **Estado actual**: La rama `asistente` y la base de datos duplicada de desarrollo se encuentran 100% validadas, integradas y sincrónicas con la versión v1.8 del sistema. El script `database/asistente_pgvector.sql` se encuentra listo en el repositorio.
+1.  **Entorno**: Workspace local `D:\repositorios\sao-ciap` posicionado en la rama `asistente`. La aplicación se encuentra conectada a la base de datos duplicada de pruebas mediante `.env.local` aislado localmente fuera del repositorio.
+2.  **Estado actual**: 
+    - Se resolvió la estilización de impresión global en `src/app/globals.css` y `src/app/admin/layout.tsx`. Las impresiones de comandas en impresoras comunes (A4/Oficio) ya no gastan tinta dibujando un fondo negro alrededor del ticket.
+    - La rama `asistente` y la base de datos duplicada de desarrollo se encuentran 100% validadas e integradas.
 3.  **Siguiente Paso Obligatorio**: Ejecutar `database/asistente_pgvector.sql` en el SQL Editor de Supabase de desarrollo (si aún no se ejecutó) y proceder a programar el script TypeScript de ingesta y vectorización para procesar `docs/v1.9/sao_bar_conocimiento_estable.md`.
-4.  **Estética**: Recuerda utilizar Tailwind 4 y aplicar los lineamientos de diseño moderno (oscuro premium mate `#1A1A1A`, bordes de vidrio `#9D9D9D/15`, tonos naranja `#F26A1B` y acentos cian `#30CFF2`). Revisa `/design` y `PLAN_IMPLEMENTACION_ASISTENTE_IA.md` para el contexto visual.
+4.  **Estética y Seguridad**: Recordar las políticas en `.agents/AGENTS.md` (sin emojis, aislamiento de `.env.local` y scope en `D:\repositorios\sao-ciap\`). Utilizar Tailwind 4 y aplicar los lineamientos de diseño moderno (oscuro premium mate `#1A1A1A`, bordes de vidrio `#9D9D9D/15`, tonos naranja `#F26A1B` y acentos cian `#30CFF2`).
 

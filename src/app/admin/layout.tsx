@@ -49,7 +49,7 @@ export default async function AdminLayout({
 
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#080A0D] font-livvic text-[#F2F2F2]">
+    <div className="min-h-screen flex flex-col bg-[#080A0D] font-livvic text-[#F2F2F2] print:bg-transparent print:min-h-0">
       {/* Topnav (56px / h-14) */}
       <header className="h-14 w-full bg-[#080A0D] border-b border-[#F2F2F2] flex items-center justify-between px-6 shrink-0 z-30 print:hidden">
         
@@ -90,7 +90,7 @@ export default async function AdminLayout({
       </header>
 
       {/* Área del Contenido Principal */}
-      <main className="flex-1 flex flex-col min-h-0 bg-[#080A0D]">
+      <main className="flex-1 flex flex-col min-h-0 bg-[#080A0D] print:bg-transparent">
         {children}
       </main>
 
