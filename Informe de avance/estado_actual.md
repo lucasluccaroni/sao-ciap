@@ -5,9 +5,9 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 ---
 
 ## Resumen de Situación
-*   **Fase Actual**: Desarrollo del Bot Asistente de IA (RAG + Tool Use) — Rama `asistente`.
-*   **Último Hito Completado**: Inicialización de la rama `asistente`, vinculación del entorno de desarrollo duplicado en Supabase (`.env.local` fuera del repo), sincronización completa del esquema v1.8 (`database/schema.sql`, `database/policies.sql`) y creación del script de infraestructura vectorial `database/asistente_pgvector.sql`.
-*   **Estado de la Sesión**: Entorno de desarrollo aislado 100% verificado y funcional. Listo para ejecutar `asistente_pgvector.sql` en Supabase e iniciar la construcción del script de ingesta de conocimiento en TypeScript.
+*   **Fase Actual**: Bot Asistente de IA (RAG + Tool Use) — Rama `asistente` (Operativo y Validado).
+*   **Último Hito Completado**: Ejecución del script de ingesta vectorial (`scripts/ingest_knowledge.ts`), vectorización completa de `sao_bar_conocimiento_estable.md`, integración del Widget del Asistente (`<AsistenteWidgetAdmin />`) y la página `/admin/asistente`, más la expansión de herramientas SQL (`consultarRendimientoHistoricoProducto`, `consultarCatalogoProductos`, etc.) tras pruebas de interacción.
+*   **Estado de la Sesión**: Asistente de IA completamente funcional e integrado al Panel de Administración con RAG + Tool Use y Failover Bidireccional de Alta Disponibilidad. Listo para refinamientos continuos o fusión hacia `main`.
 
 ---
 
@@ -72,6 +72,7 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
         - [x] Incorporar botón compacto y ultra-discreto "Regalo de la Casa" (medio de pago `'Regalo'`) con nota aclaratoria para registrar las comandas de obsequio.
         - [x] Incorporar opción de impresión física de comanda de cocina directamente desde el modal de éxito del pedido, usando estilos de impresión y un diseño compacto para ticketera térmica (con número de comanda destacado en gigante, fecha localizada y beeper opcional).
         - [x] Optimizar la regla global `@media print` en `src/app/globals.css` y `AdminLayout` para forzar fondo transparente/blanco en la hoja y evitar la impresión del fondo negro circundante en impresoras comunes (A4/Oficio).
+        - [x] Unificar la paleta de chips del medio de pago (Regalo en violeta `#7C3AED`, Mercado Pago en azul `#378ADD` y Efectivo en verde `#1D9E75`) con fondo sólido y tipografía blanca de alto contraste en el minihistorial para eliminar la saturación visual sobre el fondo naranja.
     - [x] Historial de Jornadas (`/admin/historial`)
         - [x] Incluir la columna "Regalos" en la visualización del stock histórico de la jornada auditada para transparentar desvíos.
     - [x] Calculadora de Costos (`/admin/calculadora`)
@@ -79,6 +80,8 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
         - [x] Autocompletado sugerido dinámico consumiendo el catálogo real de productos del bar.
         - [x] Estilos específicos de impresión (`@media print` y selectores `print:`) para reproducir fielmente la hoja de reporte A4 blanca, ocultando el nav de administración global, paneles y botones innecesarios en PDF.
         - [x] Leyenda informativa y pie de página de acuerdo a los wireframes (Aviso en pantalla en cursiva simple, banner de estimaciones removido y pie de página institucional simplificado).
+        - [x] Remoción de la etiqueta redundante "Sin guardar" situada junto al título principal del módulo.
+        - [x] Ajuste de margen interno de impresión (`print:p-10`) en el reporte A4 de la Calculadora para evitar que el contenido colisione con los bordes físicos de la hoja.
 
 ---
 
@@ -192,6 +195,12 @@ La base de datos se estructurará de la siguiente manera:
 - [x] Ampliación de herramientas para soportar la consulta de balances y ventas de la **Última Jornada Cerrada** y consulta directa de **Categorías**.
 - [x] Implementación de **Failover Bidireccional de Alta Disponibilidad** (OpenRouter primario $\leftrightarrow$ Groq respaldo) en `src/lib/ai/llm.ts` con ejecución apátrida (Stateless).
 - [x] Actualización de la especificación maestra v1.9 con OpenRouter como motor principal por defecto (`meta-llama/llama-3.3-70b-instruct`).
+- [x] Ejecución del script de ingesta de conocimiento vectorial (`scripts/ingest_knowledge.ts`) y almacenamiento de embeddings en la tabla `knowledge_chunks` de Supabase.
+- [x] Verificación de la recuperación semántica vectorial (`scripts/test_vector_search.ts`).
+- [x] Integración de la interfaz del Asistente IA en el Panel de Administración (Página `/admin/asistente` y Componente Flotante Registrado `<AsistenteWidgetAdmin />`).
+- [x] Ajuste iterativo del bot y ampliación de herramientas SQL en `src/lib/ai/tools.ts` (`consultarRendimientoHistoricoProducto`, `consultarCatalogoProductos`, etc.) a partir de pruebas de interacción y casos borde detectados.
+- [x] Refinamiento de contraste y colores de chips de medios de pago en UI (`Regalo` `#7C3AED`, `Mercado Pago` `#378ADD`, `Efectivo` `#1D9E75`) con fondos sólidos y letra blanca en el minihistorial lateral.
+- [x] Ajuste visual de la Calculadora de Costos (remoción de etiqueta "Sin guardar" y ampliado de margen de impresión A4 `print:p-10`).
  
 ---
  
@@ -199,8 +208,9 @@ La base de datos se estructurará de la siguiente manera:
 Si eres la IA que retoma el desarrollo en un nuevo chat:
 1.  **Entorno**: Workspace local `D:\repositorios\sao-ciap` posicionado en la rama `asistente`. La aplicación se encuentra conectada a la base de datos duplicada de pruebas mediante `.env.local` aislado localmente fuera del repositorio.
 2.  **Estado actual**: 
-    - Se resolvió la estilización de impresión global en `src/app/globals.css` y `src/app/admin/layout.tsx`. Las impresiones de comandas en impresoras comunes (A4/Oficio) ya no gastan tinta dibujando un fondo negro alrededor del ticket.
-    - La rama `asistente` y la base de datos duplicada de desarrollo se encuentran 100% validadas e integradas.
-3.  **Siguiente Paso Obligatorio**: Ejecutar `database/asistente_pgvector.sql` en el SQL Editor de Supabase de desarrollo (si aún no se ejecutó) y proceder a programar el script TypeScript de ingesta y vectorización para procesar `docs/v1.9/sao_bar_conocimiento_estable.md`.
+    - El Bot Asistente de IA (RAG + Tool Use + Failover Bidireccional) se encuentra 100% operativo, ingestado con `sao_bar_conocimiento_estable.md` y disponible mediante la solapa flotante `<AsistenteWidgetAdmin />` y en la vista `/admin/asistente`.
+    - Se refinaron la legibilidad de minihistoriales, la paleta de chips de medios de pago y los márgenes de impresión en la Calculadora de Costos.
+    - El código se encuentra sintácticamente estable y 100% verificado.
+3.  **Siguiente Paso Obligatorio**: Continuar con las pruebas de interacción del bot si surgen nuevas herramientas por agregar, o proceder con las tareas de la Fase 7 (Panel mensual de rendimiento / exportador CSV-PDF) o la preparación para la fusión de la rama `asistente` a `main`.
 4.  **Estética y Seguridad**: Recordar las políticas en `.agents/AGENTS.md` (sin emojis, aislamiento de `.env.local` y scope en `D:\repositorios\sao-ciap\`). Utilizar Tailwind 4 y aplicar los lineamientos de diseño moderno (oscuro premium mate `#1A1A1A`, bordes de vidrio `#9D9D9D/15`, tonos naranja `#F26A1B` y acentos cian `#30CFF2`).
 

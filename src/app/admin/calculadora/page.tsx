@@ -151,7 +151,7 @@ export default function CalculadoraCostosPage() {
   const totalGeneral = calcularTotalGeneral()
 
   return (
-    <div className="flex-1 flex flex-col p-6 min-h-0 bg-[#F26A1B] overflow-y-auto font-livvic print:bg-white print:p-0 print:text-black">
+    <div className="flex-1 flex flex-col p-6 min-h-0 bg-[#F26A1B] overflow-y-auto font-livvic print:bg-white print:p-10 print:text-black">
       
       {/* =======================================================================
           A. ENCABEZADO EXCLUSIVO DE IMPRESIÓN (A4 - Wireframe 24)
@@ -182,14 +182,11 @@ export default function CalculadoraCostosPage() {
         </div>
       </div>
 
-      {/* Titulo en pantalla y Badge de Estado */}
+      {/* Titulo en pantalla */}
       <div className="mb-4 flex items-center gap-3 shrink-0 print:hidden select-none">
         <h1 className="font-bold text-3xl text-[#F2F2F2] tracking-wide uppercase">
           Calculadora de costos
         </h1>
-        <span className="bg-[#9D9D9D]/20 text-[#9D9D9D] text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider">
-          Sin guardar
-        </span>
       </div>
 
       {/* Tarjeta Central Oscura */}

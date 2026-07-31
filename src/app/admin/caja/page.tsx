@@ -455,6 +455,8 @@ export default function CajaPage() {
                         className={`px-3 py-1 rounded-full text-xs font-bold border ${
                           c.medioPago === 'Efectivo'
                             ? 'bg-[#1D9E75]/10 border-[#1D9E75]/30 text-[#1D9E75]'
+                            : c.medioPago === 'Regalo'
+                            ? 'bg-[#7C3AED]/10 border-[#7C3AED]/30 text-[#7C3AED]'
                             : 'bg-[#378ADD]/10 border-[#378ADD]/30 text-[#378ADD]'
                         }`}
                       >

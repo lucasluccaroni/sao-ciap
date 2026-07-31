@@ -978,12 +978,22 @@ export default function ComandasPage() {
                   {comandasJornada.slice(0, 3).map((c) => (
                     <div
                       key={c.id}
-                      className="grid grid-cols-[45px_80px_1fr_70px] items-center py-1.5 border-b border-white/5 last:border-0 last:pb-0 gap-2"
+                      className="grid grid-cols-[45px_75px_1fr_65px] items-center py-1.5 border-b border-white/10 last:border-0 last:pb-0 gap-2"
                     >
-                      <span className="font-bold text-[#30CFF2] text-left">#{c.nro}</span>
-                      <span className="font-mono text-left">${c.total.toLocaleString('es-AR', { minimumFractionDigits: 0 })}</span>
-                      <span className="text-[10px] text-white/60 uppercase text-left truncate">{c.medioPago}</span>
-                      <div className="flex justify-end min-w-[70px]">
+                      <span className="font-extrabold text-white text-left">#{c.nro}</span>
+                      <span className="font-mono font-bold text-white text-left">${c.total.toLocaleString('es-AR', { minimumFractionDigits: 0 })}</span>
+                      <div className="text-left min-w-0">
+                        <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded text-white shadow-xs truncate inline-block ${
+                          c.medioPago === 'Efectivo'
+                            ? 'bg-[#1D9E75]'
+                            : c.medioPago === 'Regalo'
+                            ? 'bg-[#7C3AED]'
+                            : 'bg-[#378ADD]'
+                        }`}>
+                          {c.medioPago}
+                        </span>
+                      </div>
+                      <div className="flex justify-end min-w-[65px]">
                         {c.beeper ? (
                           <span className="flex items-center gap-1 text-[#F26A1B] font-bold text-[9px] bg-[#080A0D] border border-white/10 px-1.5 py-0.5 rounded shrink-0">
                             🔔 {c.beeper}

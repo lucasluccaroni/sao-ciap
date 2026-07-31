@@ -544,6 +544,8 @@ export default function HistorialJornadasPage() {
                               <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
                                 c.medioPago === 'Efectivo' 
                                   ? 'bg-[#1D9E75]/20 text-[#1D9E75]' 
+                                  : c.medioPago === 'Regalo'
+                                  ? 'bg-[#7C3AED]/20 text-[#7C3AED]'
                                   : 'bg-[#378ADD]/20 text-[#378ADD]'
                               }`}>
                                 {c.medioPago}
