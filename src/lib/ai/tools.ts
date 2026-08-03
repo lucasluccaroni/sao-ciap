@@ -256,7 +256,8 @@ export async function ejecutarTool(
       }))
 
       const gastoMayor = listaGastos[0]
-      const totalMontoGastos = listaGastos.reduce((acc, g) => acc + g.monto, 0)
+      const totalMontoGastos = listaGastos.reduce((acc: number, g: { monto: number }) => acc + g.monto, 0)
+
 
       return JSON.stringify({
         jornadaId: jornada.jornada_id,
@@ -282,7 +283,7 @@ export async function ejecutarTool(
         return JSON.stringify({ mensaje: 'No hay jornadas cerradas en el historial.' })
       }
 
-      const resumen = jornadas.map((j) => ({
+      const resumen = jornadas.map((j: any) => ({
         jornadaId: j.jornada_id,
         fechaInicio: j.fecha_inicio,
         fechaCierre: j.fecha_cierre,
@@ -309,7 +310,7 @@ export async function ejecutarTool(
         return JSON.stringify({ mensaje: 'No hay jornadas disponibles para analizar la tendencia.' })
       }
 
-      const jornadaIds = jornadas.map((j) => j.jornada_id)
+      const jornadaIds = jornadas.map((j: any) => j.jornada_id)
 
       const { data: comandas, error: cErr } = await supabase
         .from('Comandas')
@@ -320,9 +321,9 @@ export async function ejecutarTool(
         return JSON.stringify({ mensaje: 'No se registraron comandas en el período histórico consultado.' })
       }
 
-      const comandaIds = comandas.map((c) => c.comanda_id)
-      const mapaComandaJornada = new Map(comandas.map((c) => [c.comanda_id, c.jornada_id]))
-      const mapaJornadaFecha = new Map(jornadas.map((j) => [j.jornada_id, j.fecha_inicio]))
+      const comandaIds = comandas.map((c: any) => c.comanda_id)
+      const mapaComandaJornada = new Map<string, string>(comandas.map((c: any) => [c.comanda_id, c.jornada_id]))
+      const mapaJornadaFecha = new Map<string, string>(jornadas.map((j: any) => [j.jornada_id, j.fecha_inicio]))
 
       let itemsQuery = supabase
         .from('Comanda_Items')
@@ -353,8 +354,8 @@ export async function ejecutarTool(
       itemsFiltrados.forEach((item: any) => {
         const pNombre = item.Productos?.nombre || 'Producto'
         const cId = item.comanda_id
-        const jId = mapaComandaJornada.get(cId)
-        const fechaJ = mapaJornadaFecha.get(jId) || 'Fecha desconocida'
+        const jId = (mapaComandaJornada.get(cId) || 'desconocida') as string
+        const fechaJ = (mapaJornadaFecha.get(jId) || 'Fecha desconocida') as string
         const cant = Number(item.cantidad) || 0
         const subtotal = cant * (Number(item.precio_unitario) || 0)
 
@@ -436,7 +437,7 @@ export async function ejecutarTool(
       let totalMp = 0
       let totalRegalo = 0
 
-      comandas?.forEach((c) => {
+      comandas?.forEach((c: any) => {
         if (c.medio_pago === 'Efectivo') totalEfectivo += Number(c.total)
         else if (c.medio_pago === 'Mercado Pago') totalMp += Number(c.total)
         else if (c.medio_pago === 'Regalo') totalRegalo += 1
@@ -498,7 +499,7 @@ export async function ejecutarTool(
         return JSON.stringify({ mensaje: 'No se registraron ventas en esa jornada.' })
       }
 
-      const comandaIds = comandas.map((c) => c.comanda_id)
+      const comandaIds = comandas.map((c: any) => c.comanda_id)
 
       const { data: items, error: iError } = await supabase
         .from('Comanda_Items')

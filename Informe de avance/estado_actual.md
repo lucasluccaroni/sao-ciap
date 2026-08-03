@@ -7,7 +7,9 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 ## Resumen de Situación
 *   **Fase Actual**: Consolidación y Pulido Final en Rama `main` (Despliegue a Producción).
 *   **Último Hito Completado**: Fusión limpia (Fast-forward) de la rama `asistente` hacia `main`. Ejecución exitosa del script de migración idempotente `migration_v1.9_production_patch.sql` en la Base de Datos de Producción de Supabase, habilitando `pgvector`, `knowledge_chunks`, funciones RPC y RLS de la v1.9.
-*   **Estado de la Sesión**: La rama `main` es la rama unificada del proyecto que contiene todo el sistema de gestión de bar junto con el Asistente de IA (RAG + Tool Use + Failover). Se agregó la Directiva de Guardrail 8 en `src/app/actions/asistente.ts` para obligar al LLM a priorizar explicaciones procedimentales (RAG) ante preguntas de paso a paso, evitando que las llamadas a herramientas SQL eclipsen o reemplacen la respuesta procedimental.
+*   **Estado de la Sesión**: La rama `main` es la rama unificada del proyecto que contiene todo el sistema de gestión de bar junto con el Asistente de IA (RAG + Tool Use + Failover). Se corrigieron los 11 errores de tipado estricto TypeScript (`noImplicitAny` y `unknown index`) en `src/lib/ai/tools.ts` garantizando un build 100% limpio en Vercel para la rama `production`.
+
+
 
 
 
