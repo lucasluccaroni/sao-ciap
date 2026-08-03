@@ -73,6 +73,8 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
         - [x] Incorporar opción de impresión física de comanda de cocina directamente desde el modal de éxito del pedido, usando estilos de impresión y un diseño compacto para ticketera térmica (con número de comanda destacado en gigante, fecha localizada y beeper opcional).
         - [x] Optimizar la regla global `@media print` en `src/app/globals.css` y `AdminLayout` para forzar fondo transparente/blanco en la hoja y evitar la impresión del fondo negro circundante en impresoras comunes (A4/Oficio).
         - [x] Unificar la paleta de chips del medio de pago (Regalo en violeta `#7C3AED`, Mercado Pago en azul `#378ADD` y Efectivo en verde `#1D9E75`) con fondo sólido y tipografía blanca de alto contraste en el minihistorial para eliminar la saturación visual sobre el fondo naranja.
+        - [x] Configurar `.vscode/settings.json` con `css.lint.unknownAtRules: "ignore"` para evitar advertencias falsas del linter de CSS con directivas de Tailwind v4 (`@theme`, `@import "tailwindcss"`).
+
     - [x] Historial de Jornadas (`/admin/historial`)
         - [x] Incluir la columna "Regalos" en la visualización del stock histórico de la jornada auditada para transparentar desvíos.
     - [x] Calculadora de Costos (`/admin/calculadora`)
@@ -181,6 +183,8 @@ La base de datos se estructurará de la siguiente manera:
 - [x] Configuración de la base de datos Supabase duplicada para desarrollo y vinculación de variables de entorno fuera del repositorio en `next.config.ts`.
 - [x] Sincronización completa del esquema v1.8 (`vendible`, `controla_stock`, `GRANT`s) en `database/schema.sql` y `database/policies.sql`.
 - [x] Crear script SQL de infraestructura vectorial `database/asistente_pgvector.sql` (`pgvector`, tabla `knowledge_chunks`, índice HNSW y función `match_knowledge`).
+- [x] Crear script de migración idempotente y seguro `database/migration_v1.9_production_patch.sql` para actualizar la Base de Datos de Producción sin pérdida de datos reales ni errores de sintaxis.
+
 - [x] Inserción de la nueva sección de conocimiento estable sobre Stock Compartido vs Elaboración Instantánea en `sao_bar_conocimiento_estable.md`.
 - [x] Desarrollo del módulo de Embeddings en TypeScript (`src/lib/ai/embeddings.ts`) desacoplado mediante patrón Adapter/Factory.
 - [x] Desarrollo del módulo LLM y Tool Calling (`src/lib/ai/llm.ts`) desacoplado mediante patrón Adapter/Factory (OpenRouter, Groq, HuggingFace, OpenAI).
