@@ -5,9 +5,15 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 ---
 
 ## Resumen de Situación
-*   **Fase Actual**: Bot Asistente de IA (RAG + Tool Use) — Rama `asistente` (Operativo y Validado).
-*   **Último Hito Completado**: Ejecución del script de ingesta vectorial (`scripts/ingest_knowledge.ts`), vectorización completa de `sao_bar_conocimiento_estable.md`, integración del Widget del Asistente (`<AsistenteWidgetAdmin />`) y la página `/admin/asistente`, más la expansión de herramientas SQL (`consultarRendimientoHistoricoProducto`, `consultarCatalogoProductos`, etc.) tras pruebas de interacción.
-*   **Estado de la Sesión**: Asistente de IA completamente funcional e integrado al Panel de Administración con RAG + Tool Use y Failover Bidireccional de Alta Disponibilidad. Listo para refinamientos continuos o fusión hacia `main`.
+*   **Fase Actual**: Consolidación y Pulido Final en Rama `main` (Despliegue a Producción).
+*   **Último Hito Completado**: Fusión limpia (Fast-forward) de la rama `asistente` hacia `main`. Ejecución exitosa del script de migración idempotente `migration_v1.9_production_patch.sql` en la Base de Datos de Producción de Supabase, habilitando `pgvector`, `knowledge_chunks`, funciones RPC y RLS de la v1.9.
+*   **Estado de la Sesión**: La rama `main` es la rama unificada del proyecto que contiene todo el sistema de gestión de bar junto con el Asistente de IA (RAG + Tool Use + Failover). Se agregó la Directiva de Guardrail 8 en `src/app/actions/asistente.ts` para obligar al LLM a priorizar explicaciones procedimentales (RAG) ante preguntas de paso a paso, evitando que las llamadas a herramientas SQL eclipsen o reemplacen la respuesta procedimental.
+
+
+
+
+
+
 
 ---
 
@@ -205,16 +211,24 @@ La base de datos se estructurará de la siguiente manera:
 - [x] Ajuste iterativo del bot y ampliación de herramientas SQL en `src/lib/ai/tools.ts` (`consultarRendimientoHistoricoProducto`, `consultarCatalogoProductos`, etc.) a partir de pruebas de interacción y casos borde detectados.
 - [x] Refinamiento de contraste y colores de chips de medios de pago en UI (`Regalo` `#7C3AED`, `Mercado Pago` `#378ADD`, `Efectivo` `#1D9E75`) con fondos sólidos y letra blanca en el minihistorial lateral.
 - [x] Ajuste visual de la Calculadora de Costos (remoción de etiqueta "Sin guardar" y ampliado de margen de impresión A4 `print:p-10`).
+- [x] Fusión limpia (Fast-forward) de la rama `asistente` a la rama unificada `main`.
+- [x] Ejecución exitosa de `database/migration_v1.9_production_patch.sql` en la Base de Datos de Producción de Supabase.
+- [x] Unificación de rutas de secretos en `next.config.ts` y scripts de soporte (`ingest_knowledge.ts`, `test_vector_search.ts`, `test_assistant_action.ts`) hacia `D:\secrets\sao-ciap\.env.local`.
+- [x] Reescribir y blindar la base de conocimiento procedimental (`docs/v1.9/sao_bar_conocimiento_estable.md`) incorporando secciones independientes para dar de baja, editar precio, reponer stock, comandas de regalo, cierre de caja e historial.
+- [x] Implementación de la Directiva de Guardrail 8 en `src/app/actions/asistente.ts` para obligar al LLM a priorizar explicaciones procedimentales RAG ante preguntas de paso a paso.
+- [x] Actualización del Documento Maestro Definitivo v1.9 (`docs/v1.9/DOCUMENTO MAESTRO DEFINITIVO V1.9_ SISTEMA SAO BAR 2026.md`).
  
 ---
  
 ## Instrucciones para la Siguiente IA (Relevo)
 Si eres la IA que retoma el desarrollo en un nuevo chat:
-1.  **Entorno**: Workspace local `D:\repositorios\sao-ciap` posicionado en la rama `asistente`. La aplicación se encuentra conectada a la base de datos duplicada de pruebas mediante `.env.local` aislado localmente fuera del repositorio.
+1.  **Entorno**: Workspace local `D:\repositorios\sao-ciap` posicionado en la rama unificada `main`. La aplicación se encuentra conectada a la Base de Datos de Producción mediante `D:\secrets\sao-ciap\.env.local` fuera del repositorio.
 2.  **Estado actual**: 
-    - El Bot Asistente de IA (RAG + Tool Use + Failover Bidireccional) se encuentra 100% operativo, ingestado con `sao_bar_conocimiento_estable.md` y disponible mediante la solapa flotante `<AsistenteWidgetAdmin />` y en la vista `/admin/asistente`.
-    - Se refinaron la legibilidad de minihistoriales, la paleta de chips de medios de pago y los márgenes de impresión en la Calculadora de Costos.
-    - El código se encuentra sintácticamente estable y 100% verificado.
-3.  **Siguiente Paso Obligatorio**: Continuar con las pruebas de interacción del bot si surgen nuevas herramientas por agregar, o proceder con las tareas de la Fase 7 (Panel mensual de rendimiento / exportador CSV-PDF) o la preparación para la fusión de la rama `asistente` a `main`.
+    - La rama `main` contiene el sistema completo de gestión de bar y el Bot Asistente de IA (RAG + Tool Use + Failover Bidireccional).
+    - La Base de Datos de Producción cuenta con la extensión `pgvector`, la tabla `knowledge_chunks` ingestada con 21+ fragmentos procedimentales y las funciones RPC actualizadas.
+    - Se incluyó la Directiva de Guardrail 8 en `src/app/actions/asistente.ts` asegurando respuestas procedimentales paso a paso ante consultas sobre operaciones del sistema.
+    - Código verificado, compilando y listo para push a Vercel.
+3.  **Siguiente Paso Obligatorio**: Proceder con la Fase 7 (Panel mensual de rendimiento comercial y exportador CSV/PDF) o realizar pruebas de aceptación finales en Vercel.
 4.  **Estética y Seguridad**: Recordar las políticas en `.agents/AGENTS.md` (sin emojis, aislamiento de `.env.local` y scope en `D:\repositorios\sao-ciap\`). Utilizar Tailwind 4 y aplicar los lineamientos de diseño moderno (oscuro premium mate `#1A1A1A`, bordes de vidrio `#9D9D9D/15`, tonos naranja `#F26A1B` y acentos cian `#30CFF2`).
+
 

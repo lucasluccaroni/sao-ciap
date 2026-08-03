@@ -1,9 +1,15 @@
 import type { NextConfig } from "next";
 import dotenv from "dotenv";
 
-// TODO: Reemplaza esta ruta con la ruta absoluta real donde guardaste tu .env.local
-// Ejemplo en Windows: "D:\\secrets\\proyecto\\.env.local"
-dotenv.config({ path: "D:\\secrets\\sao-ciap-asistente\\.env.local" });
+import fs from "fs";
+
+// Cargar variables de entorno desde la carpeta externa de secretos principal o fallback local
+const externalEnvPath = "D:\\secrets\\sao-ciap\\.env.local";
+if (fs.existsSync(externalEnvPath)) {
+  dotenv.config({ path: externalEnvPath });
+} else {
+  dotenv.config();
+}
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -15,5 +21,6 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   },
 };
+
 
 export default nextConfig;

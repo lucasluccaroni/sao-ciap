@@ -3,12 +3,13 @@ import dotenv from 'dotenv'
 import { createClient } from '@supabase/supabase-js'
 
 // Cargar variables de entorno del archivo .env.local externo
-const envPath = process.env.DOTENV_CONFIG_PATH || 'D:\\secrets\\sao-ciap-asistente\\.env.local'
+const envPath = process.env.DOTENV_CONFIG_PATH || 'D:\\secrets\\sao-ciap\\.env.local'
 if (fs.existsSync(envPath)) {
   dotenv.config({ path: envPath })
 } else {
   dotenv.config()
 }
+
 
 import { generarEmbedding } from '../src/lib/ai/embeddings'
 

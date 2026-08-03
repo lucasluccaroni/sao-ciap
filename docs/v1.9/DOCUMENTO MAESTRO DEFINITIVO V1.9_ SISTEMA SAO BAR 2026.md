@@ -186,7 +186,7 @@ Para garantizar la independencia tecnológica (Vendor Lock-in zero) y la continu
 * **Comportamiento Re-minimizable**: Un clic secundario en la solapa o en el botón de cerrar repliega el chat dejando únicamente la etiqueta visible al pie de pantalla.
 
 ### Directivas de Seguridad y Guardrails del Asistente
-El sistema aplica un blindaje de seguridad en el Prompt de Sistema mediante 7 directivas strictly enforced:
+El sistema aplica un blindaje de seguridad en el Prompt de Sistema mediante 8 directivas strictly enforced:
 1. **Idioma Exclusivo**: Interacción y respuestas en idioma español únicamente.
 2. **Delimitación de Dominio (Out-of-Domain)**: Respuestas circunscritas exclusivamente a la operación, inventario, ventas y caja de SAO Bar 2026. Consultas ajenas son rechazadas con cordialidad.
 3. **Prohibición Estricta de Alucinación (Zero-Hallucination)**: Prohibido inventar datos, precios o existencias no presentes en el RAG o en las consultas SQL de las herramientas.
@@ -194,6 +194,8 @@ El sistema aplica un blindaje de seguridad en el Prompt de Sistema mediante 7 di
 5. **Formato Claro y Sin Emojis**: Respuestas estructuradas en español argentino sin el uso de emojis.
 6. **Prudencia y Análisis**: Razonamiento reflexivo de la información antes de generar respuestas apresuradas.
 7. **Solo Lectura Estricta (Read-Only)**: Prohibición absoluta de modificar, alterar o borrar registros. El asistente opera en modo de consulta de datos en tiempo real.
+8. **Prioridad Procedimental (RAG) vs Datos en Vivo (Tools)**: Ante consultas sobre procedimientos, reglas de negocio o guías paso a paso (ej. ¿cómo elimino/desactivo un producto?, ¿cómo se hace el cierre?, ¿cómo funciona la calculadora?), se obliga al LLM a priorizar la explicación procedimental paso a paso del RAG. Si ejecuta una herramienta SQL, la respuesta final debe integrar obligatoriamente la explicación procedimental para evitar que volcar unicamente datos tape o reemplace la respuesta al usuario.
+
 
 ---
 

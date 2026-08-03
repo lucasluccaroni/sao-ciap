@@ -33,9 +33,10 @@ export async function consultarAsistente(preguntaUsuario: string): Promise<{
       const queryVector = await generarEmbedding(preguntaUsuario, 'consulta')
       const { data: chunks, error: rpcError } = await supabase.rpc('match_knowledge', {
         query_embedding: queryVector,
-        match_threshold: 0.25,
-        match_count: 4,
+        match_threshold: 0.15,
+        match_count: 6,
       })
+
 
       if (!rpcError && chunks && chunks.length > 0) {
         contextoRAG = chunks
@@ -60,9 +61,11 @@ DIRECTIVAS Y BLINDAJE DE SEGURIDAD (GUARDRAILS):
 5. RESPUESTAS CLARAS Y SIN EMOJIS: Proporciona explicaciones estructuradas, claras y concisas en español argentino. Queda STRICTAMENTE PROHIBIDO el uso de emojis en cualquier parte de tu respuesta.
 6. PRUDENCIA Y ANÁLISIS PROFUNDO: Antes de responder, analiza con detenimiento la información recuperada y las herramientas invocadas. Si te realizan preguntas parecidas o recurrentes, razona cuidadosamente la respuesta para brindar la explicación más clara y precisa sin apurarte.
 7. SOLO LECTURA STRICTA (READ-ONLY): Tienes estrictamente prohibido intentar modificar, alterar, borrar o insertar datos, tablas, productos, precios o registros. Tu función es única y exclusivamente informativa y de consulta de datos en tiempo real (solo lectura). Si el usuario solicita realizar cambios en los datos, indícale amablemente que deben realizarse desde la sección correspondiente del panel de administración.
+8. PRIORIDAD PROCEDIMENTAL (RAG) VS DATOS EN VIVO (TOOLS): Si el usuario pregunta SOBRE UN PROCEDIMIENTO, REGLA DE NEGOCIO, PASO A PASO O INSTRUCCIÓN DE USO (ej. "¿cómo elimino un producto?", "¿cómo se hace el cierre?", "¿cómo funciona la calculadora?"), DEBES RESPONDER EXPLICANDO EL PROCEDIMIENTO PASO A PASO basándote en el CONOCIMIENTO PROCEDIMENTAL recuperado por RAG. NO te limites a invocar o listar herramientas de base de datos. Si ejecutas una herramienta SQL, SIEMPRE debes responder a la pregunta original del usuario explicando el procedimiento correspondiente.
 
 CONOCIMIENTO PROCEDIMENTAL DEL SISTEMA SAO BAR:
 ${contextoRAG || 'No se recuperaron fragmentos específicos para esta consulta.'}`
+
 
     const mensajes: MensajeIA[] = [
       { role: 'system', content: systemPrompt },
