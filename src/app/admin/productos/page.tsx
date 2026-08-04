@@ -557,8 +557,9 @@ export default function ProductosPage() {
             </thead>
             <tbody className="divide-y divide-[#9D9D9D]/15">
               {productosFiltrados.map((prod) => {
-                const esBajoStock = prod.stockActual < prod.stockIdeal
+                const esBajoStock = prod.controla_stock && prod.stockActual < 10
                 return (
+
                   <tr
                     key={prod.id}
                     className={`hover:bg-[#080A0D]/50 transition-colors ${!prod.activo ? 'opacity-50' : ''}`}

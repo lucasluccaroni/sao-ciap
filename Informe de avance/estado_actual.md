@@ -7,7 +7,7 @@ Este archivo sirve como punto de control (handoff) en tiempo real. Se actualiza 
 ## Resumen de Situación
 *   **Fase Actual**: Consolidación y Pulido Final en Rama `main` (Despliegue a Producción).
 *   **Último Hito Completado**: Fusión limpia (Fast-forward) de la rama `asistente` hacia `main`. Ejecución exitosa del script de migración idempotente `migration_v1.9_production_patch.sql` en la Base de Datos de Producción de Supabase, habilitando `pgvector`, `knowledge_chunks`, funciones RPC y RLS de la v1.9.
-*   **Estado de la Sesión**: La rama `main` es la rama unificada del proyecto que contiene todo el sistema de gestión de bar junto con el Asistente de IA (RAG + Tool Use + Failover). Se detectó y corrigió el problema de **doble hashing** en `validarPinAdmin` (`src/app/actions/jornada.ts`), agregando la verificación `pin.length === 64 ? pin : hashPin(pin)` para que acepte tanto el hash del cliente como el PIN directo sin re-hashearlo.
+*   **Estado de la Sesión**: La rama `main` es la rama unificada del proyecto que contiene todo el sistema de gestión de bar junto con el Asistente de IA (RAG + Tool Use + Failover). Se actualizó el umbral de alerta visual en `src/app/admin/productos/page.tsx` para que la señalización en rojo y la etiqueta `¡Stock Bajo!` se activen únicamente cuando las existencias reales sean inferiores a 10 unidades (`stockActual < 10`), evitando falsas alarmas cuando el stock disminuye respecto al ideal.
 
 
 
