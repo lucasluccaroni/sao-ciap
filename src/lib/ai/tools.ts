@@ -141,6 +141,28 @@ export const HERRAMIENTAS_ASISTENTE: DefinicionTool[] = [
 
 import { createClient as createSupabaseDirect } from '@supabase/supabase-js'
 
+/**
+ * Convierte una fecha UTC a formato localizado de Argentina (America/Argentina/Buenos_Aires - UTC-3).
+ */
+function formatearFechaArgentina(fechaUtc: string | Date | null | undefined): string {
+  if (!fechaUtc) return 'No especificada'
+  try {
+    const d = new Date(fechaUtc)
+    return d.toLocaleString('es-AR', {
+      timeZone: 'America/Argentina/Buenos_Aires',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    })
+  } catch {
+    return String(fechaUtc)
+  }
+}
+
 export async function ejecutarTool(
   nombre: string,
   argumentosJSON: string,
@@ -252,7 +274,7 @@ export async function ejecutarTool(
         descripcion: g.descripcion,
         monto: Number(g.monto),
         categoria: g.Categorias_Gastos?.nombre || 'General',
-        hora: g.created_at,
+        hora: formatearFechaArgentina(g.created_at),
       }))
 
       const gastoMayor = listaGastos[0]
@@ -285,8 +307,8 @@ export async function ejecutarTool(
 
       const resumen = jornadas.map((j: any) => ({
         jornadaId: j.jornada_id,
-        fechaInicio: j.fecha_inicio,
-        fechaCierre: j.fecha_cierre,
+        fechaInicio: formatearFechaArgentina(j.fecha_inicio),
+        fechaCierre: formatearFechaArgentina(j.fecha_fin || j.fecha_cierre),
         totalEfectivo: j.total_efectivo,
         totalMercadoPagoReal: j.total_mp_real,
         totalGastos: j.total_gastos,
@@ -323,7 +345,7 @@ export async function ejecutarTool(
 
       const comandaIds = comandas.map((c: any) => c.comanda_id)
       const mapaComandaJornada = new Map<string, string>(comandas.map((c: any) => [c.comanda_id, c.jornada_id]))
-      const mapaJornadaFecha = new Map<string, string>(jornadas.map((j: any) => [j.jornada_id, j.fecha_inicio]))
+      const mapaJornadaFecha = new Map<string, string>(jornadas.map((j: any) => [j.jornada_id, formatearFechaArgentina(j.fecha_inicio)]))
 
       let itemsQuery = supabase
         .from('Comanda_Items')
@@ -446,8 +468,8 @@ export async function ejecutarTool(
       return JSON.stringify({
         jornadaId: jornada.jornada_id,
         estado: jornada.estado,
-        fechaInicio: jornada.fecha_inicio,
-        fechaCierre: jornada.fecha_cierre,
+        fechaInicio: formatearFechaArgentina(jornada.fecha_inicio),
+        fechaCierre: formatearFechaArgentina(jornada.fecha_fin || jornada.fecha_cierre),
         cantComandas: comandas?.length || 0,
         totalEfectivo: jornada.total_efectivo || totalEfectivo,
         totalMercadoPagoReal: jornada.total_mp_real || totalMp,

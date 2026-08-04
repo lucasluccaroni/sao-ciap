@@ -74,9 +74,11 @@ export async function validarPinAdmin(
       return { success: false, error: 'Error al recuperar el PIN del usuario.' }
     }
 
-    if (dbUser.pin !== pin) {
+    const pinHash = hashPin(pin)
+    if (dbUser.pin !== pinHash) {
       return { success: false, error: 'PIN incorrecto.' }
     }
+
 
     return { success: true }
   } catch (err: any) {
