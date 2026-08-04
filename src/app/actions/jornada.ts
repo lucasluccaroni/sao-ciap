@@ -74,10 +74,12 @@ export async function validarPinAdmin(
       return { success: false, error: 'Error al recuperar el PIN del usuario.' }
     }
 
-    const pinHash = hashPin(pin)
+    // Si el cliente envia el hash SHA-256 (64 caracteres hex), se usa directamente; de lo contrario se calcula el hash.
+    const pinHash = pin.length === 64 ? pin : hashPin(pin)
     if (dbUser.pin !== pinHash) {
       return { success: false, error: 'PIN incorrecto.' }
     }
+
 
 
     return { success: true }
